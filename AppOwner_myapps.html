@@ -1,0 +1,2081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AppOwner — My applications</title>
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/dataviz.css">
+  <script src="assets/js/icons.js"></script>
+  <script src="assets/js/sidenav.js"></script>
+  <script src="assets/js/sidenav-appowner.js"></script>
+  <script src="assets/js/interactions.js" defer></script>
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #cde5ef;
+    }
+
+    .app {
+      display: flex;
+      align-items: stretch;
+      width: 100vw;
+      height: 100vh;
+      min-width: 1280px;
+      min-height: 720px;
+      background: #cde5ef;
+    }
+
+    /* ============================================================
+       Side Navigation — verbatim from components/side-navigation.html
+    ============================================================ */
+    .sidenav {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background-color: var(--bg-primary, white);
+      border-right: 1px solid var(--color-neutral-300, #e3e2df);
+      width: 288px;
+      transition: width var(--transition-fast);
+      overflow: hidden;
+    }
+
+    .sidenav--collapsed { width: 52px; }
+
+    .sidenav__top {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+    .sidenav__top::-webkit-scrollbar { display: none; }
+
+    .sidenav__header {
+      display: flex;
+      align-items: center;
+      width: 52px;
+      height: 52px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .sidenav__menu-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-lg, 8px);
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      flex-shrink: 0;
+      margin: 6px;
+      transition: background-color var(--transition-fast);
+    }
+    .sidenav__menu-btn:hover { background-color: var(--bg-secondary); }
+    .sidenav__menu-btn [data-icon] { width: 20px; height: 20px; }
+
+    .sidenav__logo {
+      position: absolute;
+      left: 52px;
+      display: flex;
+      align-items: center;
+      height: 52px;
+      padding: 8px 6px;
+      white-space: nowrap;
+      opacity: 1;
+      transition: opacity var(--transition-fast);
+    }
+    .sidenav--collapsed .sidenav__logo { opacity: 0; pointer-events: none; }
+
+    .sidenav__logo-text {
+      font-family: var(--font-sans);
+      font-size: 15px;
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .sidenav__nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px 6px;
+    }
+
+    .sidenav__item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 40px;
+      border-radius: var(--radius-lg, 8px);
+      padding: 0 10px;
+      cursor: pointer;
+      transition: background-color var(--transition-fast);
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm, 14px);
+      color: var(--text-primary);
+      text-decoration: none;
+      white-space: nowrap;
+      width: 100%;
+      border: none;
+      background: transparent;
+      text-align: left;
+    }
+    .sidenav__item:hover:not(.sidenav__item--active) { background-color: var(--color-neutral-200, #edece9); }
+    .sidenav__item--active { background-color: var(--color-neutral-400, #c2c1be); border-radius: 9999px; }
+    .sidenav__item [data-icon] { width: 20px; height: 20px; flex-shrink: 0; }
+
+    .sidenav__item__label {
+      flex: 1;
+      opacity: 1;
+      transition: opacity var(--transition-fast);
+    }
+    .sidenav--collapsed .sidenav__item__label { opacity: 0; width: 0; overflow: hidden; }
+
+    .sidenav__divider {
+      height: 1px;
+      background-color: var(--border-subtle, #e3e2df);
+      margin: 0 6px;
+    }
+
+    .sidenav__group { display: flex; flex-direction: column; }
+    .sidenav__group-chevron {
+      width: 16px; height: 16px; flex-shrink: 0;
+      margin-left: auto;
+      opacity: 0.5;
+    }
+    .sidenav--collapsed .sidenav__group-chevron { display: none; }
+    .sidenav--collapsed .sidenav__subnav { display: none !important; }
+
+    .sidenav__subnav {
+      list-style: none;
+      margin: 0 0 0 26px;
+      padding: 2px 0 2px 20px;
+      border-left: 1px solid var(--border-subtle, #e3e2df);
+      flex-direction: column;
+      gap: 2px;
+    }
+    .sidenav__subnav:not([hidden]) {
+      display: flex;
+    }
+    .sidenav__subnav-item {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm, 14px);
+      color: var(--text-primary);
+      text-decoration: none;
+      display: block;
+      padding: 6px 8px;
+      border-radius: var(--radius-md, 6px);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color var(--transition-fast);
+    }
+    .sidenav__subnav-item:hover {
+      background-color: var(--color-neutral-200, #edece9);
+    }
+    .sidenav__subnav-item.is-active {
+      background-color: var(--color-neutral-200, #edece9);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    .sidenav__bottom {
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidenav__profile {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 56px;
+      padding: 6px 8px;
+    }
+
+    .sidenav__avatar {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+    }
+
+    .sidenav__avatar-img {
+      width: 32px;
+      height: 32px;
+      border-radius: 9999px;
+      background-color: var(--color-neutral-800, #343331);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: var(--font-weight-semibold);
+      color: white;
+    }
+
+    .sidenav__avatar-status {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 8px;
+      height: 8px;
+      border-radius: 9999px;
+      background-color: #52cb3d;
+      border: 1.5px solid white;
+    }
+
+    .sidenav__profile-name {
+      flex: 1;
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm, 14px);
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      opacity: 1;
+      transition: opacity var(--transition-fast);
+    }
+    .sidenav--collapsed .sidenav__profile-name { opacity: 0; width: 0; overflow: hidden; }
+
+    .sidenav__profile-more {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-md, 6px);
+      border: none;
+      background: transparent;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background-color var(--transition-fast), opacity var(--transition-fast);
+    }
+    .sidenav__profile-more:hover { background-color: var(--bg-secondary); }
+    .sidenav--collapsed .sidenav__profile-more { opacity: 0; }
+    .sidenav__profile-more [data-icon] { width: 14px; height: 14px; }
+
+    .sidenav--dark {
+      background-color: transparent;
+      border-right-color: transparent;
+    }
+    .sidenav--dark .sidenav__item--active {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+    .sidenav--dark .sidenav__item { color: var(--text-primary); }
+    .sidenav--dark .sidenav__item--active { color: var(--text-primary); }
+    .sidenav--dark .sidenav__item:hover:not(.sidenav__item--active) {
+      background-color: rgba(0, 0, 0, 0.06);
+    }
+
+    .app__sidebar {
+      flex-shrink: 0;
+    }
+
+    .app__panel {
+      flex: 1;
+      min-width: 0;
+      margin: 16px 16px 16px 0;
+      height: calc(100vh - 32px);
+      border-radius: 24px;
+      border: 2px solid rgba(255,255,255,0.85);
+      background: linear-gradient(160deg, rgba(255,255,255,0.82) 0%, rgba(255,255,255,0.65) 100%);
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ============================================================
+       Insight cards — pattern from prototype - arb/ARB_7_Request_Details.html
+       (.precedent-insights .card / __metric-label / __metric-value / __metric-support)
+    ============================================================ */
+    .insight-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-4);
+      padding: 0 0 28px;
+    }
+    .insight-cards .card {
+      background: var(--bg-primary);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .insight-cards .card__body {
+      padding: var(--space-3) var(--space-4);
+    }
+    .insight-cards .card__metric-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-tertiary);
+      margin: 0 0 var(--space-2);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .insight-cards .card__metric-label [data-icon] { width: 14px; height: 14px; }
+    .insight-cards .card__metric-value {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+      line-height: var(--line-height-tight);
+      margin: 0 0 var(--space-1);
+    }
+    .insight-cards .card__metric-support {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      color: var(--text-secondary);
+      line-height: var(--line-height-snug);
+      margin: 0;
+    }
+    .insight-cards__card--opportunity .card__metric-label { color: #1a6b3c; }
+    .insight-cards__card--risk        .card__metric-label { color: #c0392b; }
+    .insight-cards__card--watching    .card__metric-label { color: #8a5b00; }
+    .insight-cards .card.insight-cards__card--opportunity { border-left: 3px solid #1a6b3c; }
+    .insight-cards .card.insight-cards__card--risk        { border-left: 3px solid #c0392b; }
+    .insight-cards .card.insight-cards__card--watching    { border-left: 3px solid #c4a95b; }
+
+    /* ============================================================
+       Page header — matches AppOwner_appdetail .detail-header (no back button)
+    ============================================================ */
+    .page-header {
+      display: flex;
+      flex-direction: column;
+      padding: 24px 24px 16px;
+      background: transparent;
+      flex-shrink: 0;
+    }
+    .page-header__title-row {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: 4px;
+    }
+    .page-header__title {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+      line-height: var(--line-height-tight);
+      margin: 0;
+    }
+    .page-header__count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 36px;
+      height: 22px;
+      padding: 0 8px;
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-secondary);
+      background: var(--color-neutral-200);
+      border-radius: var(--radius-full);
+    }
+
+    /* ============================================================
+       My apps — list
+    ============================================================ */
+    .myapps-body {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 16px 24px 32px;
+      background: transparent;
+    }
+
+    .myapps-toolbar {
+      display: none;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 0 16px 12px;
+    }
+
+    .myapps-col-headers {
+      display: grid;
+      grid-template-columns: minmax(240px, 380px) 160px 130px 130px 130px 130px 130px 180px;
+      gap: 16px;
+      margin: 12px 60px 0;
+      padding: 0 16px 8px;
+      font-family: var(--font-sans);
+      font-size: 10px;
+      font-weight: var(--font-weight-semibold);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-tertiary);
+    }
+    .myapps-col-center { text-align: center; }
+
+    /* Normalized vs actual value swap */
+    .myapps-body .stat-actual { display: none; }
+    .myapps-body--actual .stat-normalized { display: none; }
+    .myapps-body--actual .stat-actual { display: inline; }
+
+    /* ============================================================
+       Health metrics — heatmap view
+    ============================================================ */
+    .myapps-heatmap { display: none; }
+    .myapps-body--metrics { padding-right: 16px; padding-bottom: 16px; }
+    .heatmap-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 8px 0 16px;
+    }
+    .heatmap-toolbar__title {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+      margin: 0;
+      line-height: var(--line-height-tight);
+    }
+    .heatmap-toolbar__actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .heatmap-toolbar__divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border-subtle);
+      margin: 0 4px;
+    }
+    .myapps-body--metrics .insight-cards,
+    .myapps-body--metrics .myapps-toolbar,
+    .myapps-body--metrics .myapps-col-headers,
+    .myapps-body--metrics .myapps-category { display: none; }
+    .myapps-body--metrics .myapps-heatmap {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+    }
+    .myapps-body--metrics .myapps-heatmap .heatmap-toolbar { flex-shrink: 0; }
+    .myapps-body--metrics .myapps-viz-panel {
+      flex: 1;
+      min-height: 0;
+    }
+    .myapps-body--metrics .myapps-viz-panel[data-viz-panel="heatmap"] { overflow: auto; }
+
+    .heatmap-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      padding-right: 24px;
+    }
+    .heatmap {
+      display: grid;
+      grid-template-columns: 240px repeat(7, 1fr);
+      column-gap: 2px;
+      row-gap: 2px;
+      padding: 2px;
+    }
+    .heatmap-legend {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 12px 16px;
+      border-top: 1px solid var(--border-subtle);
+    }
+    .heatmap-legend__item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      color: var(--text-secondary);
+    }
+    .heatmap-legend__swatch {
+      width: 18px;
+      height: 14px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+    .heatmap-legend__swatch--healthy { background: color-mix(in srgb, var(--dv-green-5) 32%, white); }
+    .heatmap-legend__swatch--warning { background: color-mix(in srgb, var(--dv-semantic-warning-alt) 55%, white); }
+    .heatmap-legend__swatch--atrisk  { background: color-mix(in srgb, var(--dv-orange-5) 40%, white); }
+    .heatmap-legend__swatch--nodata  { background: var(--dv-neutral-200); }
+    .heatmap__cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 56px;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: var(--font-weight-normal);
+      color: var(--text-primary);
+    }
+    .heatmap__row-label {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 10px 14px;
+      background: var(--bg-primary);
+      min-height: 56px;
+    }
+    .heatmap__app-name {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+      line-height: var(--line-height-tight);
+    }
+    .heatmap__app-cap {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+    .heatmap__cell--year {
+      background: var(--bg-primary);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--text-secondary);
+      min-height: 36px;
+      align-items: flex-end;
+      padding-bottom: 8px;
+    }
+    .heatmap__cell-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm, 4px);
+      background: rgba(255, 255, 255, 0.65);
+      font-variant-numeric: tabular-nums;
+    }
+    /* Score → color mapping (derived from existing dataviz tokens) */
+    .heatmap__cell--s8,
+    .heatmap__cell--s9,
+    .heatmap__cell--s10 { background: color-mix(in srgb, var(--dv-green-5) 32%, white); }
+    .heatmap__cell--s7  { background: color-mix(in srgb, var(--dv-green-5) 22%, white); }
+    .heatmap__cell--s4,
+    .heatmap__cell--s5,
+    .heatmap__cell--s6 { background: color-mix(in srgb, var(--dv-semantic-warning-alt) 55%, white); }
+    .heatmap__cell--s1,
+    .heatmap__cell--s2,
+    .heatmap__cell--s3 { background: color-mix(in srgb, var(--dv-orange-5) 40%, white); }
+    .heatmap__cell--s0 { background: color-mix(in srgb, var(--dv-red-5) 38%, white); }
+    .heatmap__cell--none {
+      background: var(--dv-neutral-200);
+      color: var(--text-tertiary);
+    }
+    .heatmap__cell--none .heatmap__cell-pill { background: transparent; }
+
+    /* ============================================================
+       Health metrics — sunburst view
+    ============================================================ */
+    .myapps-viz-panel[hidden] { display: none; }
+
+    .sunburst-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 16px 16px 20px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .sunburst-card__layout {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      min-height: 0;
+    }
+    .sunburst-card__chart {
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sunburst {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      display: block;
+    }
+    .sunburst__cat-slice {
+      fill: var(--color-neutral-200, #edece9);
+      stroke: white;
+      stroke-width: 2;
+    }
+    .sunburst__app-slice {
+      stroke: white;
+      stroke-width: 1.5;
+      cursor: pointer;
+      transition: opacity var(--transition-fast);
+    }
+    .sunburst__app-slice:hover { opacity: 0.78; }
+    .sunburst__cat-label {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: var(--font-weight-semibold);
+      fill: var(--text-primary);
+      pointer-events: none;
+    }
+    .sunburst__app-label {
+      font-family: var(--font-sans);
+      font-size: 9px;
+      font-weight: var(--font-weight-medium);
+      pointer-events: none;
+    }
+    .sunburst__center-primary {
+      font-family: var(--font-sans);
+      font-size: 24px;
+      font-weight: var(--font-weight-semibold);
+      fill: var(--text-primary);
+    }
+    .sunburst__center-secondary {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      fill: var(--text-secondary);
+    }
+    .sunburst__center-tertiary {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      fill: var(--text-tertiary);
+    }
+    .sunburst-legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .sunburst-legend__item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      color: var(--text-secondary);
+    }
+    .sunburst-legend__swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .myapps-category { margin: 0 60px 20px; }
+    .myapps-col-headers + .myapps-category { margin-top: -22px; }
+    .myapps-category__header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .myapps-category__icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      color: var(--text-secondary);
+    }
+    .myapps-category__icon [data-icon] { width: 16px; height: 16px; }
+    .myapps-category__title {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-semibold);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-secondary);
+    }
+    .myapps-category__line {
+      display: none;
+    }
+
+    .myapps-card {
+      background: var(--surface-primary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .myapps-row {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(240px, 380px) 160px 130px 130px 130px 130px 130px 180px;
+      gap: 16px;
+      align-items: center;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: background-color var(--transition-fast);
+    }
+    .myapps-row + .myapps-row {
+      border-top: 1px solid var(--border-subtle);
+    }
+    .myapps-row:hover { background: var(--bg-tertiary); }
+    .myapps-row--flagged::before,
+    .myapps-row--action::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+    }
+    .myapps-row--flagged::before { background: var(--dv-orange-5); }
+    .myapps-row--action::before  { background: var(--color-error); }
+
+    .myapps-card__name-cell {
+      min-width: 0;
+    }
+    .myapps-card__name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+    }
+    .myapps-card__capability {
+      margin-top: 2px;
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      color: var(--text-tertiary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .myapps-card__stat { text-align: center; }
+    .myapps-card__stat-value {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+    }
+    .myapps-card__stat-value--muted {
+      color: var(--text-tertiary);
+      font-weight: var(--font-weight-normal);
+      font-style: italic;
+    }
+    .myapps-card__stat-label {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      color: var(--text-tertiary);
+    }
+
+    .myapps-card__disposition {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+    .myapps-card__lifecycle-warning {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-error);
+    }
+
+    /* Boxed-inverted tabs variant (mirrors components/tabs.html) */
+    .tabs--boxed-inverted.tabs--boxed .tab--active {
+      background-color: var(--color-neutral-700);
+      color: var(--text-inverted);
+    }
+
+    .myapps-tabs {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* ============================================================
+       Health metrics — bubble view
+       Mirrors .sunburst-card / .sunburst-legend patterns
+    ============================================================ */
+    .bubble-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 16px 16px 20px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .bubble-card__layout {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      min-height: 0;
+    }
+    .bubble-card__chart {
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .bubble {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      display: block;
+    }
+    .bubble__plot-bg { fill: white; }
+    .bubble__grid    { stroke: var(--color-neutral-200, #edece9); stroke-width: 1; }
+    .bubble__guide   { stroke: var(--color-neutral-400, #c2c1be); stroke-width: 1; }
+    .bubble__axis    { stroke: var(--color-neutral-300, #e3e2df); stroke-width: 1; }
+    .bubble__tick {
+      font-family: var(--font-sans);
+      font-size: 10px;
+      fill: var(--text-tertiary);
+    }
+    .bubble__axis-title {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: var(--font-weight-semibold);
+      fill: var(--text-secondary);
+      text-transform: none;
+    }
+    .bubble__quadrant-label {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: var(--font-weight-semibold);
+      fill: var(--text-secondary);
+    }
+    .bubble__quadrant-bg {
+      fill: var(--color-neutral-200, #edece9);
+      rx: 4;
+      ry: 4;
+    }
+    .bubble__dot {
+      stroke: white;
+      stroke-width: 1.5;
+      cursor: pointer;
+      fill-opacity: 0.6;
+      transition: fill-opacity var(--transition-fast), stroke var(--transition-fast), stroke-width var(--transition-fast);
+    }
+    .bubble__dot:hover {
+      fill-opacity: 0.85;
+      stroke: var(--color-neutral-800, #343331);
+      stroke-width: 2;
+    }
+    .bubble__label {
+      font-family: var(--font-sans);
+      font-size: 9px;
+      font-weight: var(--font-weight-medium);
+      fill: var(--text-primary);
+      pointer-events: none;
+    }
+    .bubble-legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+    .bubble-legend__group-label {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      color: var(--text-tertiary);
+    }
+
+    /* ============================================================
+       App health donut — modal opened on bubble click
+       Modal structure mirrors prototype - arb/ARB_7_Request_Details.html
+    ============================================================ */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-backdrop.is-open { display: flex; }
+
+    .modal {
+      background: var(--bg-primary);
+      border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-xl);
+      width: 520px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .modal__header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: var(--space-4) var(--space-5) var(--space-2);
+      gap: var(--space-3);
+    }
+    .modal__title {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+      margin: 0 0 2px;
+    }
+    .modal__subtitle {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      color: var(--text-tertiary);
+    }
+    .modal__close {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border: none;
+      border-radius: var(--radius-lg);
+      background: none;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      transition: background-color var(--transition-fast);
+      flex-shrink: 0;
+    }
+    .modal__close:hover { background-color: var(--bg-secondary); }
+    .modal__close [data-icon] { width: 14px; height: 14px; }
+    .modal__body {
+      padding: 0 var(--space-5) var(--space-5);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      align-items: center;
+      overflow-y: auto;
+    }
+
+    .health-donut {
+      width: 320px;
+      height: 320px;
+      display: block;
+    }
+    .health-donut__slice {
+      stroke: white;
+      stroke-width: 2;
+    }
+    .health-donut__center-primary {
+      font-family: var(--font-sans);
+      font-size: 22px;
+      font-weight: var(--font-weight-semibold);
+      fill: var(--text-primary);
+    }
+    .health-donut__center-secondary {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      fill: var(--text-tertiary);
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Sidebar -->
+  <div class="app__sidebar">
+    <div data-component="appowner-sidenav"></div>
+  </div>
+
+  <!-- Main panel -->
+  <div class="app__panel">
+
+    <!-- Header -->
+    <header class="page-header">
+      <div class="page-header__title-row">
+        <h1 class="page-header__title">My applications</h1>
+        <span class="page-header__count">11</span>
+        <div class="myapps-tabs">
+          <div class="tabs tabs--boxed tabs--boxed-inverted" id="myapps-view-tabs" role="tablist">
+            <button class="tab tab--active" role="tab" aria-selected="true" data-value="list">Application list</button>
+            <button class="tab" role="tab" aria-selected="false" data-value="metrics">Health metrics</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Body -->
+    <div class="myapps-body">
+
+      <!-- Insight cards -->
+      <div class="insight-cards" hidden style="display:none">
+        <div class="card insight-cards__card--opportunity">
+          <div class="card__body">
+            <p class="card__metric-label"><span data-icon="circle-check"></span> Opportunity</p>
+            <p class="card__metric-value">Consolidate whiteboarding to Miro</p>
+            <p class="card__metric-support">Mural usage 32% · save $67K/yr by migrating 890 users.</p>
+          </div>
+        </div>
+        <div class="card insight-cards__card--opportunity">
+          <div class="card__body">
+            <p class="card__metric-label"><span data-icon="circle-check"></span> Opportunity</p>
+            <p class="card__metric-value">Drop Google Meet</p>
+            <p class="card__metric-support">18% usage · redundant with Teams &amp; Zoom · 600 active users.</p>
+          </div>
+        </div>
+        <div class="card insight-cards__card--risk">
+          <div class="card__body">
+            <p class="card__metric-label"><span data-icon="diamond-exclamation"></span> Risk</p>
+            <p class="card__metric-value">Webex renewal due January</p>
+            <p class="card__metric-support">24% usage · Retire decision pending · $89K/yr at stake.</p>
+          </div>
+        </div>
+        <div class="card insight-cards__card--watching">
+          <div class="card__body">
+            <p class="card__metric-label"><span data-icon="eye"></span> Watching</p>
+            <p class="card__metric-value">Box renewal Feb '26</p>
+            <p class="card__metric-support">Stable 42% usage · 10 months of runway · monitor adoption ahead of renewal decision.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="myapps-toolbar">
+        <label class="toggle-label">
+          <input type="checkbox" class="toggle-input" id="toggle-actual-data">
+          <span class="toggle-track"><span class="toggle-handle"></span></span>
+          <span class="toggle-text">Show actual data</span>
+        </label>
+      </div>
+
+      <div class="myapps-col-headers">
+        <div></div>
+        <div>Disposition</div>
+        <div class="myapps-col-center">CSAT</div>
+        <div class="myapps-col-center">Functional fit</div>
+        <div class="myapps-col-center">Usage rate</div>
+        <div class="myapps-col-center">Technical risk</div>
+        <div class="myapps-col-center">Users</div>
+        <div class="myapps-col-center">Annual cost</div>
+      </div>
+
+      <!-- Video Conferencing -->
+      <section class="myapps-category">
+        <div class="myapps-category__header">
+          <span class="myapps-category__title">Video Conferencing</span>
+          <span class="badge badge--neutral-tertiary">4</span>
+          <div class="myapps-category__line"></div>
+        </div>
+        <div class="myapps-card">
+
+          <div class="myapps-row">
+            <div class="myapps-card__name-cell">
+              <div class="myapps-card__name">Microsoft Teams</div>
+              <div class="myapps-card__capability">Internal calls · O365 integration · Primary platform</div>
+            </div>
+            <div class="myapps-card__disposition">
+              <span class="badge badge--success-tertiary">Invest</span>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">8.8</span><span class="stat-actual">4.4/5</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">9.2</span><span class="stat-actual">92%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">8.7</span><span class="stat-actual">87%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">9.0</span><span class="stat-actual">Low</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value">9,400</div>
+              <div class="myapps-card__stat-label">users</div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value myapps-card__stat-value--muted">Bundled</div>
+              <div class="myapps-card__stat-label">M365 license</div>
+            </div>          </div>
+
+          <div class="myapps-row">
+            <div class="myapps-card__name-cell">
+              <div class="myapps-card__name">Zoom</div>
+              <div class="myapps-card__capability">External meetings · Webinars · Client-facing</div>
+            </div>
+            <div class="myapps-card__disposition">
+              <span class="badge badge--info-tertiary">Sustain</span>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">9.2</span><span class="stat-actual">4.6/5</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">8.8</span><span class="stat-actual">88%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">8.2</span><span class="stat-actual">82%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">9.0</span><span class="stat-actual">Low</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value">8,200</div>
+              <div class="myapps-card__stat-label">users</div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value">$420K</div>
+              <div class="myapps-card__stat-label">per year</div>
+            </div>          </div>
+
+          <div class="myapps-row myapps-row--action">
+            <div class="myapps-card__name-cell">
+              <div class="myapps-card__name">Webex</div>
+              <div class="myapps-card__capability">Legacy enterprise calls · Overlap with Teams · Contract renewal Jan</div>
+            </div>
+            <div class="myapps-card__disposition">
+              <span class="badge badge--error-tertiary">Retire</span>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">6.4</span><span class="stat-actual">3.2/5</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">5.4</span><span class="stat-actual">54%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">2.4</span><span class="stat-actual">24%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">5.0</span><span class="stat-actual">Medium</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value">1,200</div>
+              <div class="myapps-card__stat-label">users</div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value">$89K</div>
+              <div class="myapps-card__stat-label">per year</div>
+            </div>          </div>
+
+          <div class="myapps-row myapps-row--flagged">
+            <div class="myapps-card__name-cell">
+              <div class="myapps-card__name">Google Meet</div>
+              <div class="myapps-card__capability">Ad hoc calls · Bundled with Workspace · Low adoption</div>
+            </div>
+            <div class="myapps-card__disposition">
+              <span class="badge badge--purple-tertiary">Evaluate</span>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">7.6</span><span class="stat-actual">3.8/5</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">6.1</span><span class="stat-actual">61%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">1.8</span><span class="stat-actual">18%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">8.5</span><span class="stat-actual">Low</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value">600</div>
+              <div class="myapps-card__stat-label">users</div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value myapps-card__stat-value--muted">Bundled</div>
+              <div class="myapps-card__stat-label">G Workspace</div>
+            </div>          </div>
+
+        </div>
+      </section>
+
+      <!-- Whiteboarding -->
+      <section class="myapps-category">
+        <div class="myapps-category__header">
+          <span class="myapps-category__title">Whiteboarding</span>
+          <span class="badge badge--neutral-tertiary">3</span>
+          <div class="myapps-category__line"></div>
+        </div>
+        <div class="myapps-card">
+
+          <div class="myapps-row">
+            <div class="myapps-card__name-cell">
+              <div class="myapps-card__name">Miro</div>
+              <div class="myapps-card__capability">Design thinking · Retrospectives · Product planning</div>
+            </div>
+            <div class="myapps-card__disposition">
+              <span class="badge badge--success-tertiary">Invest</span>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">9.4</span><span class="stat-actual">4.7/5</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">9.0</span><span class="stat-actual">90%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">7.1</span><span class="stat-actual">71%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">8.5</span><span class="stat-actual">Low</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value">3,100</div>
+              <div class="myapps-card__stat-label">users</div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value">$156K</div>
+              <div class="myapps-card__stat-label">per year</div>
+            </div>          </div>
+
+          <div class="myapps-row myapps-row--action">
+            <div class="myapps-card__name-cell">
+              <div class="myapps-card__name">Mural</div>
+              <div class="myapps-card__capability">Workshops · Overlap with Miro · Migration plan needed by Dec</div>
+            </div>
+            <div class="myapps-card__disposition">
+              <span class="badge badge--warning-tertiary">Migrate → Miro</span>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">7.8</span><span class="stat-actual">3.9/5</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">6.5</span><span class="stat-actual">65%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">3.2</span><span class="stat-actual">32%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">5.5</span><span class="stat-actual">Medium</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value">890</div>
+              <div class="myapps-card__stat-label">users</div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value">$67K</div>
+              <div class="myapps-card__stat-label">per year</div>
+            </div>          </div>
+
+          <div class="myapps-row">
+            <div class="myapps-card__name-cell">
+              <div class="myapps-card__name">Lucid</div>
+              <div class="myapps-card__capability">Diagramming · Process flows · Architecture modeling</div>
+            </div>
+            <div class="myapps-card__disposition">
+              <span class="badge badge--info-tertiary">Sustain</span>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">8.6</span><span class="stat-actual">4.3/5</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">8.2</span><span class="stat-actual">82%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">5.8</span><span class="stat-actual">58%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">8.5</span><span class="stat-actual">Low</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value">1,450</div>
+              <div class="myapps-card__stat-label">users</div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value">$98K</div>
+              <div class="myapps-card__stat-label">per year</div>
+            </div>          </div>
+
+        </div>
+      </section>
+
+      <!-- Async Messaging -->
+      <section class="myapps-category">
+        <div class="myapps-category__header">
+          <span class="myapps-category__title">Async Messaging</span>
+          <span class="badge badge--neutral-tertiary">2</span>
+          <div class="myapps-category__line"></div>
+        </div>
+        <div class="myapps-card">
+
+          <div class="myapps-row">
+            <div class="myapps-card__name-cell">
+              <div class="myapps-card__name">Slack</div>
+              <div class="myapps-card__capability">Team comms · 200+ integrations · Preferred platform</div>
+            </div>
+            <div class="myapps-card__disposition">
+              <span class="badge badge--success-tertiary">Invest</span>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">9.6</span><span class="stat-actual">4.8/5</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">9.5</span><span class="stat-actual">95%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">9.1</span><span class="stat-actual">91%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">9.0</span><span class="stat-actual">Low</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value">11,200</div>
+              <div class="myapps-card__stat-label">users</div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value">$512K</div>
+              <div class="myapps-card__stat-label">per year</div>
+            </div>          </div>
+
+          <div class="myapps-row myapps-row--flagged">
+            <div class="myapps-card__name-cell">
+              <div class="myapps-card__name">MS Teams Chat</div>
+              <div class="myapps-card__capability">Teams-based messaging · Bundled · Coexists with Slack</div>
+            </div>
+            <div class="myapps-card__disposition">
+              <span class="badge badge--info-tertiary">Sustain</span>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">7.4</span><span class="stat-actual">3.7/5</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">7.0</span><span class="stat-actual">70%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">4.8</span><span class="stat-actual">48%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">6.0</span><span class="stat-actual">Medium</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value">9,400</div>
+              <div class="myapps-card__stat-label">users</div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value myapps-card__stat-value--muted">Bundled</div>
+              <div class="myapps-card__stat-label">M365 license</div>
+            </div>          </div>
+
+        </div>
+      </section>
+
+      <!-- Document Sharing -->
+      <section class="myapps-category">
+        <div class="myapps-category__header">
+          <span class="myapps-category__title">Document Sharing</span>
+          <span class="badge badge--neutral-tertiary">2</span>
+          <div class="myapps-category__line"></div>
+        </div>
+        <div class="myapps-card">
+
+          <div class="myapps-row">
+            <div class="myapps-card__name-cell">
+              <div class="myapps-card__name">SharePoint</div>
+              <div class="myapps-card__capability">Intranet · Document management · Internal collaboration</div>
+            </div>
+            <div class="myapps-card__disposition">
+              <span class="badge badge--success-tertiary">Invest</span>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">7.8</span><span class="stat-actual">3.9/5</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">7.8</span><span class="stat-actual">78%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">7.6</span><span class="stat-actual">76%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">6.5</span><span class="stat-actual">Medium</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value">8,900</div>
+              <div class="myapps-card__stat-label">users</div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value myapps-card__stat-value--muted">Bundled</div>
+              <div class="myapps-card__stat-label">M365 license</div>
+            </div>          </div>
+
+          <div class="myapps-row myapps-row--action">
+            <div class="myapps-card__name-cell">
+              <div class="myapps-card__name">Box</div>
+              <div class="myapps-card__capability">External sharing · Legal docs · Contract renewal Feb '26</div>
+            </div>
+            <div class="myapps-card__disposition">
+              <span class="badge badge--purple-tertiary">Evaluate</span>
+              <span class="myapps-card__lifecycle-warning">Renewal Feb '26</span>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">8.2</span><span class="stat-actual">4.1/5</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">7.2</span><span class="stat-actual">72%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">4.2</span><span class="stat-actual">42%</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value"><span class="stat-normalized">8.0</span><span class="stat-actual">Low</span></div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value">2,300</div>
+              <div class="myapps-card__stat-label">users</div>
+            </div>
+            <div class="myapps-card__stat">
+              <div class="myapps-card__stat-value">$178K</div>
+              <div class="myapps-card__stat-label">per year</div>
+            </div>          </div>
+
+        </div>
+      </section>
+
+      <!-- Health metrics — viz panels (hidden until tab switched) -->
+      <div class="myapps-heatmap">
+        <div class="heatmap-toolbar">
+          <h2 class="heatmap-toolbar__title">Application health</h2>
+          <div class="heatmap-toolbar__actions">
+            <div class="tabs tabs--boxed tabs--boxed-inverted tabs--sm" id="myapps-viz-tabs" role="tablist" aria-label="Visualization">
+              <button class="tab tab--active" role="tab" aria-selected="true" data-viz="heatmap">Heatmap</button>
+              <button class="tab" role="tab" aria-selected="false" data-viz="sunburst" hidden style="display:none">Sunburst</button>
+              <button class="tab" role="tab" aria-selected="false" data-viz="bubble">Bubble</button>
+              <button class="tab" role="tab" aria-selected="false" data-viz="kanban">Kanban</button>
+            </div>
+            <span class="heatmap-toolbar__divider"></span>
+            <button type="button" class="btn-iconic btn-ghost btn-sm" aria-label="Filter">
+              <span data-icon="filter"></span>
+            </button>
+            <button type="button" class="btn-iconic btn-ghost btn-sm" aria-label="Settings">
+              <span data-icon="gear"></span>
+            </button>
+            <button type="button" class="btn-iconic btn-ghost btn-sm" aria-label="More">
+              <span data-icon="more-horizontal"></span>
+            </button>
+          </div>
+        </div>
+        <div class="myapps-viz-panel" data-viz-panel="heatmap">
+          <div class="heatmap-card">
+            <div class="heatmap" id="myapps-heatmap"></div>
+            <div class="heatmap-legend">
+              <span class="heatmap-legend__item"><span class="heatmap-legend__swatch heatmap-legend__swatch--healthy"></span>Healthy</span>
+              <span class="heatmap-legend__item"><span class="heatmap-legend__swatch heatmap-legend__swatch--warning"></span>Warning</span>
+              <span class="heatmap-legend__item"><span class="heatmap-legend__swatch heatmap-legend__swatch--atrisk"></span>At risk</span>
+              <span class="heatmap-legend__item"><span class="heatmap-legend__swatch heatmap-legend__swatch--nodata"></span>No data</span>
+            </div>
+          </div>
+        </div>
+        <div class="myapps-viz-panel" data-viz-panel="sunburst" hidden>
+          <div class="sunburst-card">
+            <div class="sunburst-card__layout">
+              <div class="sunburst-card__chart" id="myapps-sunburst"></div>
+              <div class="sunburst-legend">
+                <span class="sunburst-legend__item"><span class="sunburst-legend__swatch" style="background:#5dc486"></span>Invest</span>
+                <span class="sunburst-legend__item"><span class="sunburst-legend__swatch" style="background:#7eb6e8"></span>Sustain</span>
+                <span class="sunburst-legend__item"><span class="sunburst-legend__swatch" style="background:#ad96f4"></span>Evaluate</span>
+                <span class="sunburst-legend__item"><span class="sunburst-legend__swatch" style="background:#f5c150"></span>Migrate</span>
+                <span class="sunburst-legend__item"><span class="sunburst-legend__swatch" style="background:#ec7e7e"></span>Retire</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="myapps-viz-panel" data-viz-panel="bubble" hidden>
+          <div class="bubble-card">
+            <div class="bubble-card__layout">
+              <div class="bubble-card__chart" id="myapps-bubble"></div>
+              <div class="bubble-legend">
+                <span class="bubble-legend__group-label">Planned disposition</span>
+                <span class="sunburst-legend__item"><span class="sunburst-legend__swatch" style="background:#5dc486"></span>Invest</span>
+                <span class="sunburst-legend__item"><span class="sunburst-legend__swatch" style="background:#7eb6e8"></span>Sustain</span>
+                <span class="sunburst-legend__item"><span class="sunburst-legend__swatch" style="background:#ad96f4"></span>Evaluate</span>
+                <span class="sunburst-legend__item"><span class="sunburst-legend__swatch" style="background:#f5c150"></span>Migrate</span>
+                <span class="sunburst-legend__item"><span class="sunburst-legend__swatch" style="background:#ec7e7e"></span>Retire</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- App health donut — opens when a bubble is clicked -->
+<div class="modal-backdrop" id="app-health-modal" role="dialog" aria-hidden="true" aria-labelledby="app-health-modal-title">
+  <div class="modal">
+    <div class="modal__header">
+      <div>
+        <h3 class="modal__title" id="app-health-modal-title">App health</h3>
+        <div class="modal__subtitle" id="app-health-modal-subtitle"></div>
+      </div>
+      <button type="button" class="modal__close" aria-label="Close" data-modal-close="app-health-modal">
+        <span data-icon="close"></span>
+      </button>
+    </div>
+    <div class="modal__body">
+      <div id="app-health-donut"></div>
+      <div class="sunburst-legend">
+        <span class="bubble-legend__group-label">Slice size = TCO</span>
+        <span class="sunburst-legend__item"><span class="sunburst-legend__swatch" style="background:#5dc486"></span>Healthy</span>
+        <span class="sunburst-legend__item"><span class="sunburst-legend__swatch" style="background:#f5c150"></span>Warning</span>
+        <span class="sunburst-legend__item"><span class="sunburst-legend__swatch" style="background:#ec7e7e"></span>At risk</span>
+        <span class="sunburst-legend__item"><span class="sunburst-legend__swatch" style="background:#cdcdc8"></span>Inactive</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    Horizon.mountComponents();
+    Horizon.initIcons();
+
+    const sidenav = document.getElementById('sidenav-main');
+    if (sidenav) {
+      sidenav.querySelector('.sidenav__menu-btn').addEventListener('click', () => {
+        sidenav.classList.toggle('sidenav--collapsed');
+      });
+      sidenav.querySelectorAll('.sidenav__item').forEach(i => i.classList.remove('sidenav__item--active'));
+      const myAppsLink = sidenav.querySelector('a[href$="AppOwner_myapps.html"]');
+      if (myAppsLink) myAppsLink.classList.add('sidenav__item--active');
+    }
+
+    // Row click → open app detail (all rows land on the same detail page for this prototype)
+    document.querySelectorAll('.myapps-row').forEach(row => {
+      row.addEventListener('click', () => {
+        location.href = 'AppOwner_appdetail.html';
+      });
+    });
+
+    // "Show actual data" toggle — swaps normalized 1–10 scores for actual values
+    const actualToggle = document.getElementById('toggle-actual-data');
+    const myappsBody = document.querySelector('.myapps-body');
+    if (actualToggle && myappsBody) {
+      actualToggle.addEventListener('change', (e) => {
+        myappsBody.classList.toggle('myapps-body--actual', e.target.checked);
+      });
+    }
+
+    // Health metrics heatmap — 11 apps × 2020-2026
+    const HEATMAP_YEARS = [2020, 2021, 2022, 2023, 2024, 2025, 2026];
+    const HEATMAP_ROWS = [
+      { name: 'Microsoft Teams', cap: 'Video Conferencing', scores: [7, 8, 9, 9, 9, 9, 9] },
+      { name: 'Zoom',            cap: 'Video Conferencing', scores: [8, 8, 8, 9, 9, 8, 8] },
+      { name: 'Webex',           cap: 'Video Conferencing', scores: [8, 8, 7, 6, 5, 4, 3] },
+      { name: 'Google Meet',     cap: 'Video Conferencing', scores: [null, null, 5, 4, 3, 2, 2] },
+      { name: 'Miro',            cap: 'Whiteboarding',      scores: [null, null, 6, 7, 8, 9, 9] },
+      { name: 'Mural',           cap: 'Whiteboarding',      scores: [9, 8, 7, 6, 5, 4, 3] },
+      { name: 'Lucid',           cap: 'Whiteboarding',      scores: [6, 7, 8, 8, 8, 8, 8] },
+      { name: 'Slack',           cap: 'Async Messaging',    scores: [9, 9, 9, 9, 9, 8, 8] },
+      { name: 'MS Teams Chat',   cap: 'Async Messaging',    scores: [null, 5, 6, 7, 8, 8, 8] },
+      { name: 'SharePoint',      cap: 'Document Sharing',   scores: [7, 8, 8, 8, 8, 7, 7] },
+      { name: 'Box',             cap: 'Document Sharing',   scores: [8, 8, 8, 8, 7, 7, 6] },
+    ];
+
+    function renderMyappsHeatmap() {
+      const grid = document.getElementById('myapps-heatmap');
+      if (!grid || grid.dataset.rendered === '1') return;
+      const parts = [];
+      // Header row: empty corner + year labels
+      parts.push('<div class="heatmap__row-label" style="min-height:36px"></div>');
+      HEATMAP_YEARS.forEach(y => {
+        parts.push('<div class="heatmap__cell heatmap__cell--year">' + y + '</div>');
+      });
+      // Data rows
+      HEATMAP_ROWS.forEach(row => {
+        parts.push(
+          '<div class="heatmap__row-label">' +
+            '<div class="heatmap__app-name">' + row.name + '</div>' +
+            '<div class="heatmap__app-cap">' + row.cap + '</div>' +
+          '</div>'
+        );
+        row.scores.forEach(s => {
+          if (s === null || s === undefined) {
+            parts.push('<div class="heatmap__cell heatmap__cell--none"><span class="heatmap__cell-pill">–</span></div>');
+          } else {
+            parts.push('<div class="heatmap__cell heatmap__cell--s' + s + '"><span class="heatmap__cell-pill">' + s + '</span></div>');
+          }
+        });
+      });
+      grid.innerHTML = parts.join('');
+      grid.dataset.rendered = '1';
+    }
+
+    // View tabs — toggle between Application list / Health metrics
+    const viewTabs = document.getElementById('myapps-view-tabs');
+    if (viewTabs) {
+      viewTabs.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          viewTabs.querySelectorAll('.tab').forEach(t => {
+            t.classList.remove('tab--active');
+            t.setAttribute('aria-selected', 'false');
+          });
+          tab.classList.add('tab--active');
+          tab.setAttribute('aria-selected', 'true');
+          const isMetrics = tab.dataset.value === 'metrics';
+          if (myappsBody) myappsBody.classList.toggle('myapps-body--metrics', isMetrics);
+          if (isMetrics) renderMyappsHeatmap();
+        });
+      });
+    }
+
+    // Sunburst — categories (inner) + apps (outer), sized by TCO, colored by disposition.
+    // Bundled apps use allocated TCO estimates so they get visible slices.
+    const SUNBURST_APPS = [
+      { name: 'Microsoft Teams', cat: 'Video Conferencing', disp: 'Invest',   users: 9400,  tco: 280, costLabel: 'M365 (allocated)' },
+      { name: 'Zoom',            cat: 'Video Conferencing', disp: 'Sustain',  users: 8200,  tco: 420, costLabel: '$420K/yr' },
+      { name: 'Webex',           cat: 'Video Conferencing', disp: 'Retire',   users: 1200,  tco: 89,  costLabel: '$89K/yr' },
+      { name: 'Google Meet',     cat: 'Video Conferencing', disp: 'Evaluate', users: 600,   tco: 32,  costLabel: 'G Workspace (allocated)' },
+      { name: 'Miro',            cat: 'Whiteboarding',      disp: 'Invest',   users: 3100,  tco: 156, costLabel: '$156K/yr' },
+      { name: 'Mural',           cat: 'Whiteboarding',      disp: 'Migrate',  users: 890,   tco: 67,  costLabel: '$67K/yr' },
+      { name: 'Lucid',           cat: 'Whiteboarding',      disp: 'Sustain',  users: 1450,  tco: 98,  costLabel: '$98K/yr' },
+      { name: 'Slack',           cat: 'Async Messaging',    disp: 'Invest',   users: 11200, tco: 512, costLabel: '$512K/yr' },
+      { name: 'MS Teams Chat',   cat: 'Async Messaging',    disp: 'Sustain',  users: 9400,  tco: 120, costLabel: 'M365 (allocated)' },
+      { name: 'SharePoint',      cat: 'Document Sharing',   disp: 'Invest',   users: 8900,  tco: 240, costLabel: 'M365 (allocated)' },
+      { name: 'Box',             cat: 'Document Sharing',   disp: 'Evaluate', users: 2300,  tco: 178, costLabel: '$178K/yr' },
+    ];
+    const SUNBURST_DISP_FILL = {
+      Invest:   '#5dc486',
+      Sustain:  '#7eb6e8',
+      Evaluate: '#ad96f4',
+      Migrate:  '#f5c150',
+      Retire:   '#ec7e7e',
+    };
+    const SUNBURST_DISP_INK = {
+      Invest:   '#1a6b3c',
+      Sustain:  '#1a5a8a',
+      Evaluate: '#5b21b6',
+      Migrate:  '#8a5b00',
+      Retire:   '#c0392b',
+    };
+    const SUNBURST_CAT_ORDER = ['Video Conferencing','Whiteboarding','Async Messaging','Document Sharing'];
+
+    function renderMyappsSunburst() {
+      const container = document.getElementById('myapps-sunburst');
+      if (!container || container.dataset.rendered === '1') return;
+
+      const cx = 300, cy = 300;
+      const rHole = 75, rMid = 175, rOuter = 290;
+
+      const grouped = SUNBURST_CAT_ORDER.map(c => {
+        const apps = SUNBURST_APPS.filter(a => a.cat === c);
+        return { name: c, apps, tco: apps.reduce((s, a) => s + a.tco, 0) };
+      });
+      const grandTco = grouped.reduce((s, g) => s + g.tco, 0);
+
+      function polar(angleDeg, r) {
+        const rad = (angleDeg - 90) * Math.PI / 180;
+        return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+      }
+      function arcPath(start, end, rIn, rOut) {
+        const [x1, y1] = polar(start, rOut);
+        const [x2, y2] = polar(end,   rOut);
+        const [x3, y3] = polar(end,   rIn);
+        const [x4, y4] = polar(start, rIn);
+        const large = (end - start) > 180 ? 1 : 0;
+        return `M ${x1} ${y1} A ${rOut} ${rOut} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${rIn} ${rIn} 0 ${large} 0 ${x4} ${y4} Z`;
+      }
+      function labelRotation(mid) {
+        let r = mid - 90;
+        if (mid > 180) r -= 180;
+        return r;
+      }
+      function escapeXml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      }
+      function wrapLabel(name) {
+        const words = name.split(' ');
+        if (words.length === 1) return [name];
+        if (words.length === 2) return words;
+        const mid = Math.ceil(words.length / 2);
+        return [words.slice(0, mid).join(' '), words.slice(mid).join(' ')];
+      }
+      function labelTspans(name, anchorX) {
+        const lines = wrapLabel(name);
+        if (lines.length === 1) {
+          return `<tspan x="${anchorX}">${escapeXml(lines[0])}</tspan>`;
+        }
+        return (
+          `<tspan x="${anchorX}" dy="-0.4em">${escapeXml(lines[0])}</tspan>` +
+          `<tspan x="${anchorX}" dy="1.0em">${escapeXml(lines[1])}</tspan>`
+        );
+      }
+
+      const slices = [];
+      let cursor = 0;
+      grouped.forEach(g => {
+        const sweep = (g.tco / grandTco) * 360;
+        const catStart = cursor;
+        const catEnd = cursor + sweep;
+        slices.push({ kind: 'cat', name: g.name, start: catStart, end: catEnd, tco: g.tco });
+        let appCursor = catStart;
+        g.apps.forEach(a => {
+          const aSweep = (a.tco / g.tco) * sweep;
+          slices.push({
+            kind: 'app',
+            name: a.name,
+            cat: g.name,
+            disp: a.disp,
+            users: a.users,
+            costLabel: a.costLabel,
+            tco: a.tco,
+            start: appCursor,
+            end: appCursor + aSweep,
+          });
+          appCursor += aSweep;
+        });
+        cursor += sweep;
+      });
+
+      const parts = [];
+      // Inner ring — categories
+      slices.filter(s => s.kind === 'cat').forEach(s => {
+        parts.push(
+          `<path class="sunburst__cat-slice" d="${arcPath(s.start, s.end, rHole, rMid)}">` +
+            `<title>${escapeXml(s.name)} · $${s.tco}K TCO</title>` +
+          `</path>`
+        );
+      });
+      // Outer ring — apps
+      slices.filter(s => s.kind === 'app').forEach(s => {
+        const fill = SUNBURST_DISP_FILL[s.disp];
+        parts.push(
+          `<path class="sunburst__app-slice" data-app="${escapeXml(s.name)}" fill="${fill}" d="${arcPath(s.start, s.end, rMid, rOuter)}">` +
+            `<title>${escapeXml(s.name)} · ${escapeXml(s.disp)} · ${s.users.toLocaleString()} users · ${escapeXml(s.costLabel)}</title>` +
+          `</path>`
+        );
+      });
+      // Category labels
+      slices.filter(s => s.kind === 'cat').forEach(s => {
+        const sweep = s.end - s.start;
+        if (sweep < 14) return;
+        const mid = (s.start + s.end) / 2;
+        const [tx, ty] = polar(mid, (rHole + rMid) / 2);
+        const rot = labelRotation(mid);
+        parts.push(
+          `<text class="sunburst__cat-label" x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="central" transform="rotate(${rot} ${tx} ${ty})">${labelTspans(s.name, tx)}</text>`
+        );
+      });
+      // App labels (skip very thin slices)
+      slices.filter(s => s.kind === 'app').forEach(s => {
+        const sweep = s.end - s.start;
+        if (sweep < 8) return;
+        const mid = (s.start + s.end) / 2;
+        const [tx, ty] = polar(mid, (rMid + rOuter) / 2);
+        const rot = labelRotation(mid);
+        const ink = SUNBURST_DISP_INK[s.disp];
+        parts.push(
+          `<text class="sunburst__app-label" fill="${ink}" x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="central" transform="rotate(${rot} ${tx} ${ty})">${labelTspans(s.name, tx)}</text>`
+        );
+      });
+      // Center summary
+      const totalApps = SUNBURST_APPS.length;
+      const totalCats = SUNBURST_CAT_ORDER.length;
+      const tcoLabel = `~$${(grandTco / 1000).toFixed(1)}M TCO`;
+      parts.push(`<text class="sunburst__center-primary" x="${cx}" y="${cy - 6}" text-anchor="middle">${totalApps} apps</text>`);
+      parts.push(`<text class="sunburst__center-secondary" x="${cx}" y="${cy + 14}" text-anchor="middle">${totalCats} categories</text>`);
+      parts.push(`<text class="sunburst__center-tertiary" x="${cx}" y="${cy + 32}" text-anchor="middle">${tcoLabel}</text>`);
+
+      container.innerHTML =
+        `<svg class="sunburst" viewBox="0 0 600 600" role="img" aria-label="App portfolio sunburst by TCO and disposition">` +
+        parts.join('') +
+        `</svg>`;
+
+      container.querySelectorAll('.sunburst__app-slice').forEach(el => {
+        el.addEventListener('click', () => { location.href = 'AppOwner_appdetail.html'; });
+      });
+
+      container.dataset.rendered = '1';
+    }
+
+    // Bubble — CSAT × Functional fit, sized by TCO, colored by disposition.
+    // Demo distribution chosen to fill all four quadrants; list-row scores reflect
+    // detailed app ratings and intentionally diverge from this portfolio-shape view.
+    const BUBBLE_APPS = [
+      { name: 'Microsoft Teams', csat: 7.2, fit: 7.6, tco: 280, disp: 'Invest'   }, // Invest
+      { name: 'Zoom',            csat: 2.4, fit: 7.2, tco: 420, disp: 'Sustain'  }, // Sustain
+      { name: 'Webex',           csat: 2.6, fit: 2.4, tco: 89,  disp: 'Retire'   }, // Retire
+      { name: 'Google Meet',     csat: 4.0, fit: 8.8, tco: 32,  disp: 'Evaluate' }, // Sustain edge
+      { name: 'Miro',            csat: 8.7, fit: 7.9, tco: 156, disp: 'Invest'   }, // Invest
+      { name: 'Mural',           csat: 7.0, fit: 2.0, tco: 67,  disp: 'Migrate'  }, // Migrate
+      { name: 'Lucid',           csat: 1.6, fit: 8.0, tco: 98,  disp: 'Sustain'  }, // Sustain
+      { name: 'Slack',           csat: 9.0, fit: 7.6, tco: 512, disp: 'Invest'   }, // Invest
+      { name: 'MS Teams Chat',   csat: 2.8, fit: 7.5, tco: 120, disp: 'Sustain'  }, // Sustain
+      { name: 'SharePoint',      csat: 8.2, fit: 4.8, tco: 240, disp: 'Invest'   }, // Migrate edge
+      { name: 'Box',             csat: 8.5, fit: 3.8, tco: 178, disp: 'Evaluate' }, // Migrate
+    ];
+    const BUBBLE_DISP_FILL = SUNBURST_DISP_FILL;
+
+    // Per-app TCO breakdown by health state — slice size = TCO ($K), color = health.
+    // Demo-grade decomposition; numbers per app sum to the app TCO above.
+    const APP_HEALTH_SLICES = {
+      'Microsoft Teams': [
+        { label: 'License',      tco: 180, health: 'Healthy' },
+        { label: 'Storage',      tco: 40,  health: 'Healthy' },
+        { label: 'Support',      tco: 40,  health: 'Warning' },
+        { label: 'Integrations', tco: 20,  health: 'Healthy' },
+      ],
+      'Zoom': [
+        { label: 'License',  tco: 250, health: 'Healthy' },
+        { label: 'Recording',tco: 90,  health: 'Warning' },
+        { label: 'Webinar',  tco: 60,  health: 'Healthy' },
+        { label: 'Support',  tco: 20,  health: 'Warning' },
+      ],
+      'Webex': [
+        { label: 'License',     tco: 50, health: 'At risk' },
+        { label: 'Telephony',   tco: 25, health: 'At risk' },
+        { label: 'Maintenance', tco: 14, health: 'Inactive' },
+      ],
+      'Google Meet': [
+        { label: 'License',  tco: 12, health: 'Inactive' },
+        { label: 'Bundled',  tco: 15, health: 'Warning'  },
+        { label: 'Support',  tco: 5,  health: 'Inactive' },
+      ],
+      'Miro': [
+        { label: 'License',  tco: 100, health: 'Healthy' },
+        { label: 'Add-ons',  tco: 35,  health: 'Healthy' },
+        { label: 'Storage',  tco: 15,  health: 'Warning' },
+        { label: 'Training', tco: 6,   health: 'Healthy' },
+      ],
+      'Mural': [
+        { label: 'License', tco: 45, health: 'Warning'  },
+        { label: 'Storage', tco: 15, health: 'At risk'  },
+        { label: 'Support', tco: 7,  health: 'Inactive' },
+      ],
+      'Lucid': [
+        { label: 'License', tco: 60, health: 'Healthy' },
+        { label: 'Add-ons', tco: 25, health: 'Healthy' },
+        { label: 'Storage', tco: 13, health: 'Warning' },
+      ],
+      'Slack': [
+        { label: 'License', tco: 350, health: 'Healthy' },
+        { label: 'Connect', tco: 90,  health: 'Healthy' },
+        { label: 'Apps',    tco: 40,  health: 'Warning' },
+        { label: 'Support', tco: 32,  health: 'Healthy' },
+      ],
+      'MS Teams Chat': [
+        { label: 'License',    tco: 80, health: 'Healthy' },
+        { label: 'Storage',    tco: 25, health: 'Warning' },
+        { label: 'Compliance', tco: 15, health: 'Healthy' },
+      ],
+      'SharePoint': [
+        { label: 'License',       tco: 140, health: 'Healthy' },
+        { label: 'Storage',       tco: 60,  health: 'Warning' },
+        { label: 'Customization', tco: 30,  health: 'At risk' },
+        { label: 'Support',       tco: 10,  health: 'Warning' },
+      ],
+      'Box': [
+        { label: 'License',    tco: 110, health: 'Warning' },
+        { label: 'Storage',    tco: 45,  health: 'At risk' },
+        { label: 'Governance', tco: 15,  health: 'Warning' },
+        { label: 'Support',    tco: 8,   health: 'Healthy' },
+      ],
+    };
+    const HEALTH_FILL = {
+      'Healthy':  '#5dc486',
+      'Warning':  '#f5c150',
+      'At risk':  '#ec7e7e',
+      'Inactive': '#cdcdc8',
+    };
+
+    function renderMyappsBubble() {
+      const container = document.getElementById('myapps-bubble');
+      if (!container || container.dataset.rendered === '1') return;
+
+      // Plot geometry (matches CSS viewBox)
+      const VB_W = 800, VB_H = 520;
+      const xMin = 60, xMax = 770, yMin = 30, yMax = 460;
+      const xRange = xMax - xMin, yRange = yMax - yMin;
+
+      const x = csat => xMin + (csat / 10) * xRange;
+      const y = fit  => yMax - (fit  / 10) * yRange;
+
+      // Bubble radius — sqrt scaling between min/max TCO in the dataset
+      const tcos = BUBBLE_APPS.map(a => a.tco);
+      const tMin = Math.min(...tcos), tMax = Math.max(...tcos);
+      const sMin = Math.sqrt(tMin),   sMax = Math.sqrt(tMax);
+      const rMin = 14, rMax = 52;
+      const radius = tco => {
+        const t = (Math.sqrt(tco) - sMin) / (sMax - sMin || 1);
+        return rMin + t * (rMax - rMin);
+      };
+
+      const parts = [];
+      // Plot background
+      parts.push(`<rect class="bubble__plot-bg" x="${xMin}" y="${yMin}" width="${xRange}" height="${yRange}" />`);
+      // Gridlines + ticks
+      for (let i = 0; i <= 10; i++) {
+        const gx = x(i), gy = y(i);
+        parts.push(`<line class="bubble__grid" x1="${gx}" y1="${yMin}" x2="${gx}" y2="${yMax}" />`);
+        parts.push(`<line class="bubble__grid" x1="${xMin}" y1="${gy}" x2="${xMax}" y2="${gy}" />`);
+        if (i > 0) {
+          parts.push(`<text class="bubble__tick" x="${gx}" y="${yMax + 14}" text-anchor="middle">${i}</text>`);
+          parts.push(`<text class="bubble__tick" x="${xMin - 8}" y="${gy + 3}" text-anchor="end">${i}</text>`);
+        }
+      }
+      // Axes
+      parts.push(`<line class="bubble__axis" x1="${xMin}" y1="${yMin}" x2="${xMin}" y2="${yMax}" />`);
+      parts.push(`<line class="bubble__axis" x1="${xMin}" y1="${yMax}" x2="${xMax}" y2="${yMax}" />`);
+      // Quadrant guides at midpoint (5,5)
+      parts.push(`<line class="bubble__guide" x1="${x(5)}" y1="${yMin}" x2="${x(5)}" y2="${yMax}" />`);
+      parts.push(`<line class="bubble__guide" x1="${xMin}" y1="${y(5)}" x2="${xMax}" y2="${y(5)}" />`);
+
+      // Quadrant corner labels (rounded backgrounds)
+      const QUAD_PAD_X = 6, QUAD_PAD_Y = 4;
+      const quad = [
+        { label: 'Sustain', anchor: 'start', tx: xMin + 10,  ty: yMin + 18 },
+        { label: 'Invest',  anchor: 'end',   tx: xMax - 10,  ty: yMin + 18 },
+        { label: 'Retire',  anchor: 'start', tx: xMin + 10,  ty: yMax - 10 },
+        { label: 'Migrate', anchor: 'end',   tx: xMax - 10,  ty: yMax - 10 },
+      ];
+      quad.forEach(q => {
+        const w = q.label.length * 6.5 + QUAD_PAD_X * 2;
+        const rx = q.anchor === 'start' ? q.tx - QUAD_PAD_X : q.tx - w + QUAD_PAD_X;
+        parts.push(`<rect class="bubble__quadrant-bg" x="${rx}" y="${q.ty - 11}" width="${w}" height="${16}" />`);
+        parts.push(`<text class="bubble__quadrant-label" x="${q.tx}" y="${q.ty}" text-anchor="${q.anchor}">${q.label}</text>`);
+      });
+
+      // Axis titles
+      parts.push(`<text class="bubble__axis-title" x="${(xMin + xMax) / 2}" y="${VB_H - 10}" text-anchor="middle">CSAT</text>`);
+      parts.push(`<text class="bubble__axis-title" x="${-(yMin + yMax) / 2}" y="18" transform="rotate(-90)" text-anchor="middle">Functional fit</text>`);
+
+      // Bubbles
+      const sorted = BUBBLE_APPS.slice().sort((a, b) => b.tco - a.tco);
+      sorted.forEach(a => {
+        const cx = x(a.csat), cy = y(a.fit), r = radius(a.tco);
+        const fill = BUBBLE_DISP_FILL[a.disp] || '#cdcdc8';
+        const esc = a.name.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        parts.push(
+          `<circle class="bubble__dot" data-app="${esc}" cx="${cx}" cy="${cy}" r="${r}" fill="${fill}">` +
+            `<title>${esc} · ${a.disp} · CSAT ${a.csat} · Fit ${a.fit} · $${a.tco}K TCO</title>` +
+          `</circle>`
+        );
+      });
+      // Labels — drawn after bubbles so they sit on top
+      sorted.forEach(a => {
+        const cx = x(a.csat), cy = y(a.fit), r = radius(a.tco);
+        const esc = a.name.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        parts.push(`<text class="bubble__label" x="${cx}" y="${cy - r - 3}" text-anchor="middle">${esc}</text>`);
+      });
+
+      container.innerHTML =
+        `<svg class="bubble" viewBox="0 0 ${VB_W} ${VB_H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="App portfolio bubble chart by CSAT, functional fit, and TCO">` +
+        parts.join('') +
+        `</svg>`;
+
+      container.querySelectorAll('.bubble__dot').forEach(el => {
+        el.addEventListener('click', () => openAppHealthModal(el.dataset.app));
+      });
+
+      container.dataset.rendered = '1';
+    }
+
+    function renderHealthDonut(appName) {
+      const host = document.getElementById('app-health-donut');
+      const slices = APP_HEALTH_SLICES[appName] || [];
+      if (!host) return;
+      const cx = 160, cy = 160, rIn = 70, rOut = 130;
+      const total = slices.reduce((s, x) => s + x.tco, 0) || 1;
+
+      function polar(angleDeg, r) {
+        const rad = (angleDeg - 90) * Math.PI / 180;
+        return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+      }
+      function arcPath(start, end, rIn, rOut) {
+        const [x1, y1] = polar(start, rOut);
+        const [x2, y2] = polar(end,   rOut);
+        const [x3, y3] = polar(end,   rIn);
+        const [x4, y4] = polar(start, rIn);
+        const large = (end - start) > 180 ? 1 : 0;
+        return `M ${x1} ${y1} A ${rOut} ${rOut} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${rIn} ${rIn} 0 ${large} 0 ${x4} ${y4} Z`;
+      }
+      function esc(s) {
+        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      }
+
+      const parts = [];
+      let cursor = 0;
+      slices.forEach(s => {
+        const sweep = (s.tco / total) * 360;
+        const fill = HEALTH_FILL[s.health] || '#cdcdc8';
+        parts.push(
+          `<path class="health-donut__slice" fill="${fill}" d="${arcPath(cursor, cursor + sweep, rIn, rOut)}">` +
+            `<title>${esc(s.label)} · ${esc(s.health)} · $${s.tco}K</title>` +
+          `</path>`
+        );
+        cursor += sweep;
+      });
+
+      parts.push(`<text class="health-donut__center-primary" x="${cx}" y="${cy - 4}" text-anchor="middle">$${total}K</text>`);
+      parts.push(`<text class="health-donut__center-secondary" x="${cx}" y="${cy + 14}" text-anchor="middle">Total TCO</text>`);
+
+      host.innerHTML =
+        `<svg class="health-donut" viewBox="0 0 320 320" role="img" aria-label="${esc(appName)} health by TCO">` +
+        parts.join('') +
+        `</svg>`;
+    }
+
+    function openAppHealthModal(appName) {
+      const titleEl = document.getElementById('app-health-modal-title');
+      const subEl = document.getElementById('app-health-modal-subtitle');
+      const app = BUBBLE_APPS.find(a => a.name === appName);
+      if (titleEl) titleEl.textContent = appName;
+      if (subEl && app) subEl.textContent = `${app.disp} · CSAT ${app.csat} · Functional fit ${app.fit}`;
+      renderHealthDonut(appName);
+      Horizon.openModal('app-health-modal');
+      Horizon.initIcons();
+    }
+
+    document.querySelectorAll('[data-modal-close]').forEach(btn => {
+      btn.addEventListener('click', () => Horizon.closeModal(btn.dataset.modalClose));
+    });
+
+    // Inner viz tabs — Heatmap / Sunburst / Bubble (Kanban inert until wired)
+    const vizTabs = document.getElementById('myapps-viz-tabs');
+    if (vizTabs) {
+      const panels = document.querySelectorAll('.myapps-viz-panel');
+      vizTabs.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const target = tab.dataset.viz;
+          if (target !== 'heatmap' && target !== 'sunburst' && target !== 'bubble') return;
+          vizTabs.querySelectorAll('.tab').forEach(t => {
+            t.classList.remove('tab--active');
+            t.setAttribute('aria-selected', 'false');
+          });
+          tab.classList.add('tab--active');
+          tab.setAttribute('aria-selected', 'true');
+          panels.forEach(p => {
+            p.hidden = p.dataset.vizPanel !== target;
+          });
+          if (target === 'sunburst') renderMyappsSunburst();
+          if (target === 'bubble')   renderMyappsBubble();
+        });
+      });
+    }
+  });
+</script>
+
+</body>
+</html>

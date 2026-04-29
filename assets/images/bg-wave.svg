@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMax slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#eaf2f8"/>
+      <stop offset="40%" stop-color="#e4eef6"/>
+      <stop offset="100%" stop-color="#d6e5f0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#sky)"/>
+  <!-- Wave layer 5 (farthest, lightest) -->
+  <path d="M0 750 Q200 700 480 740 T960 720 T1440 750 T1920 720 L1920 1080 L0 1080Z" fill="#c8dbe8" opacity="0.35"/>
+  <!-- Wave layer 4 -->
+  <path d="M0 800 Q300 760 600 790 T1100 770 T1500 800 T1920 780 L1920 1080 L0 1080Z" fill="#b0cfe0" opacity="0.4"/>
+  <!-- Wave layer 3 -->
+  <path d="M0 850 Q250 820 500 850 T1000 830 T1440 860 T1920 840 L1920 1080 L0 1080Z" fill="#9cc3d8" opacity="0.45"/>
+  <!-- Wave layer 2 -->
+  <path d="M0 900 Q350 870 700 900 T1200 880 T1600 910 T1920 890 L1920 1080 L0 1080Z" fill="#88b7ce" opacity="0.5"/>
+  <!-- Wave layer 1 (closest, darkest) -->
+  <path d="M0 950 Q300 930 600 955 T1100 940 T1500 960 T1920 945 L1920 1080 L0 1080Z" fill="#7aaec6" opacity="0.55"/>
+</svg>

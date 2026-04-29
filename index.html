@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Application Portfolio — Prototypes</title>
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/js/icons.js"></script>
+  <script src="assets/js/interactions.js" defer></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg-secondary, #f6f5f3);
+      min-height: 100vh;
+      font-family: var(--font-family-base);
+      color: var(--text-primary);
+    }
+
+    .index-shell {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 80px 32px 64px;
+    }
+
+    .index-eyebrow {
+      font-size: var(--font-size-xs, 12px);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-secondary, #6b6a67);
+      margin: 0 0 12px;
+    }
+
+    .index-title {
+      font-size: 32px;
+      font-weight: 600;
+      line-height: 1.2;
+      margin: 0 0 12px;
+      color: var(--text-primary);
+    }
+
+    .index-subtitle {
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--text-secondary, #6b6a67);
+      margin: 0 0 40px;
+      max-width: 640px;
+    }
+
+    .index-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .index-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 24px;
+      background: var(--bg-primary, #ffffff);
+      border: 1px solid var(--color-neutral-300, #e3e2df);
+      border-radius: var(--radius-md, 8px);
+      text-decoration: none;
+      color: inherit;
+      transition: border-color var(--transition-fast, 150ms ease),
+                  box-shadow var(--transition-fast, 150ms ease),
+                  transform var(--transition-fast, 150ms ease);
+    }
+
+    .index-card:hover {
+      border-color: var(--color-primary, #1d2bce);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+      transform: translateY(-1px);
+    }
+
+    .index-card__body {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .index-card__name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .index-card__desc {
+      font-size: 14px;
+      color: var(--text-secondary, #6b6a67);
+    }
+
+    .index-card__chev {
+      color: var(--text-secondary, #6b6a67);
+      flex: 0 0 auto;
+    }
+
+    .index-card:hover .index-card__chev {
+      color: var(--color-primary, #1d2bce);
+    }
+  </style>
+</head>
+<body>
+  <main class="index-shell">
+    <p class="index-eyebrow">Prototypes</p>
+    <h1 class="index-title">Application Portfolio</h1>
+    <p class="index-subtitle">App owner experience — landing, my apps, app detail, and roadmap views.</p>
+
+    <nav class="index-list">
+      <a class="index-card" href="AppOwner_landing.html">
+        <span class="index-card__body">
+          <span class="index-card__name">App Owner — Landing</span>
+          <span class="index-card__desc">Home dashboard with portfolio summary and quick actions</span>
+        </span>
+        <span class="index-card__chev" data-icon="arrow-right"></span>
+      </a>
+
+      <a class="index-card" href="AppOwner_myapps.html">
+        <span class="index-card__body">
+          <span class="index-card__name">My Applications</span>
+          <span class="index-card__desc">List view of applications owned by the user</span>
+        </span>
+        <span class="index-card__chev" data-icon="arrow-right"></span>
+      </a>
+
+      <a class="index-card" href="AppOwner_appdetail.html">
+        <span class="index-card__body">
+          <span class="index-card__name">Application Detail</span>
+          <span class="index-card__desc">Full record view of a single application</span>
+        </span>
+        <span class="index-card__chev" data-icon="arrow-right"></span>
+      </a>
+
+      <a class="index-card" href="AppOwner_roadmap.html">
+        <span class="index-card__body">
+          <span class="index-card__name">Roadmap</span>
+          <span class="index-card__desc">Multi-year application roadmap timeline</span>
+        </span>
+        <span class="index-card__chev" data-icon="arrow-right"></span>
+      </a>
+
+      <a class="index-card" href="AppOwner_roadmap_scenarios.html">
+        <span class="index-card__body">
+          <span class="index-card__name">Roadmap — Scenarios</span>
+          <span class="index-card__desc">Compare roadmap scenarios side by side</span>
+        </span>
+        <span class="index-card__chev" data-icon="arrow-right"></span>
+      </a>
+    </nav>
+  </main>
+</body>
+</html>

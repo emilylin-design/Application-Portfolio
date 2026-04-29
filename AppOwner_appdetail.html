@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AppOwner — Mural</title>
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/floating-panel.css">
+  <script src="assets/js/icons.js"></script>
+  <script src="assets/js/sidenav.js"></script>
+  <script src="assets/js/sidenav-appowner.js"></script>
+  <script src="assets/js/interactions.js" defer></script>
+  <style>
+    /* ============================================================
+       Canvas (same pattern as AppOwner_myapps / AppOwner_roadmap)
+    ============================================================ */
+    html, body {
+      width: 100%; height: 100%; margin: 0; padding: 0;
+      overflow: hidden;
+      background: #cde5ef;
+    }
+    .app {
+      display: flex;
+      align-items: stretch;
+      width: 100vw;
+      height: 100vh;
+      min-width: 1280px;
+      min-height: 720px;
+      background: #cde5ef;
+    }
+
+    /* ============================================================
+       Side Navigation — verbatim from AppOwner_myapps.html
+    ============================================================ */
+    .sidenav {
+      display: flex; flex-direction: column; height: 100%;
+      background-color: var(--bg-primary, white);
+      border-right: 1px solid var(--color-neutral-300, #e3e2df);
+      width: 288px; transition: width var(--transition-fast);
+      overflow: hidden;
+    }
+    .sidenav--collapsed { width: 52px; }
+    .sidenav__top { display: flex; flex-direction: column; flex: 1; overflow-y: auto; scrollbar-width: none; }
+    .sidenav__top::-webkit-scrollbar { display: none; }
+    .sidenav__header { display: flex; align-items: center; width: 52px; height: 52px; flex-shrink: 0; position: relative; }
+    .sidenav__menu-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px;
+      border-radius: var(--radius-lg, 8px); border: none;
+      background: transparent; color: var(--text-secondary);
+      cursor: pointer; flex-shrink: 0; margin: 6px;
+      transition: background-color var(--transition-fast);
+    }
+    .sidenav__menu-btn:hover { background-color: var(--bg-secondary); }
+    .sidenav__menu-btn [data-icon] { width: 20px; height: 20px; }
+    .sidenav__logo {
+      position: absolute; left: 52px; display: flex; align-items: center;
+      height: 52px; padding: 8px 6px; white-space: nowrap; opacity: 1;
+      transition: opacity var(--transition-fast);
+    }
+    .sidenav--collapsed .sidenav__logo { opacity: 0; pointer-events: none; }
+    .sidenav__logo-text {
+      font-family: var(--font-sans); font-size: 15px;
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary); letter-spacing: -0.01em;
+    }
+    .sidenav__nav { display: flex; flex-direction: column; gap: 8px; padding: 8px 6px; }
+    .sidenav__item {
+      display: flex; align-items: center; gap: 8px;
+      height: 40px; border-radius: var(--radius-lg, 8px);
+      padding: 0 10px; cursor: pointer;
+      transition: background-color var(--transition-fast);
+      font-family: var(--font-sans); font-size: var(--font-size-sm, 14px);
+      color: var(--text-primary); text-decoration: none; white-space: nowrap;
+      width: 100%; border: none; background: transparent; text-align: left;
+    }
+    .sidenav__item:hover:not(.sidenav__item--active) { background-color: var(--color-neutral-200, #edece9); }
+    .sidenav__item--active { background-color: var(--color-neutral-400, #c2c1be); border-radius: 9999px; }
+    .sidenav__item [data-icon] { width: 20px; height: 20px; flex-shrink: 0; }
+    .sidenav__item__label { flex: 1; opacity: 1; transition: opacity var(--transition-fast); }
+    .sidenav--collapsed .sidenav__item__label { opacity: 0; width: 0; overflow: hidden; }
+    .sidenav__divider { height: 1px; background-color: var(--border-subtle, #e3e2df); margin: 0 6px; }
+    .sidenav__group { display: flex; flex-direction: column; }
+    .sidenav__group-chevron { width: 16px; height: 16px; flex-shrink: 0; margin-left: auto; opacity: 0.5; }
+    .sidenav--collapsed .sidenav__group-chevron { display: none; }
+    .sidenav--collapsed .sidenav__subnav { display: none !important; }
+    .sidenav__subnav {
+      list-style: none; margin: 0 0 0 26px;
+      padding: 2px 0 2px 20px;
+      border-left: 1px solid var(--border-subtle, #e3e2df);
+      flex-direction: column; gap: 2px;
+    }
+    .sidenav__subnav:not([hidden]) { display: flex; }
+    .sidenav__subnav-item {
+      font-family: var(--font-sans); font-size: var(--font-size-sm, 14px);
+      color: var(--text-primary); text-decoration: none;
+      display: block; padding: 6px 8px;
+      border-radius: var(--radius-md, 6px);
+      cursor: pointer; white-space: nowrap;
+      transition: background-color var(--transition-fast);
+    }
+    .sidenav__subnav-item:hover { background-color: var(--color-neutral-200, #edece9); }
+    .sidenav__subnav-item.is-active {
+      background-color: var(--color-neutral-200, #edece9);
+      font-weight: var(--font-weight-semibold);
+    }
+    .sidenav__bottom { display: flex; flex-direction: column; flex-shrink: 0; }
+    .sidenav__profile { display: flex; align-items: center; gap: 8px; height: 56px; padding: 6px 8px; }
+    .sidenav__avatar { position: relative; width: 32px; height: 32px; flex-shrink: 0; }
+    .sidenav__avatar-img {
+      width: 32px; height: 32px; border-radius: 9999px;
+      background-color: var(--color-neutral-800, #343331);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-sans); font-size: 12px;
+      font-weight: var(--font-weight-semibold); color: white;
+    }
+    .sidenav__avatar-status {
+      position: absolute; bottom: 0; right: 0;
+      width: 8px; height: 8px; border-radius: 9999px;
+      background-color: #52cb3d; border: 1.5px solid white;
+    }
+    .sidenav__profile-name {
+      flex: 1; font-family: var(--font-sans);
+      font-size: var(--font-size-sm, 14px); color: var(--text-primary);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      opacity: 1; transition: opacity var(--transition-fast);
+    }
+    .sidenav--collapsed .sidenav__profile-name { opacity: 0; width: 0; overflow: hidden; }
+    .sidenav__profile-more {
+      display: flex; align-items: center; justify-content: center;
+      width: 24px; height: 24px; border-radius: var(--radius-md, 6px);
+      border: none; background: transparent; color: var(--text-tertiary);
+      cursor: pointer; flex-shrink: 0;
+      transition: background-color var(--transition-fast), opacity var(--transition-fast);
+    }
+    .sidenav__profile-more:hover { background-color: var(--bg-secondary); }
+    .sidenav--collapsed .sidenav__profile-more { opacity: 0; }
+    .sidenav__profile-more [data-icon] { width: 14px; height: 14px; }
+
+    .sidenav--dark {
+      background-color: transparent;
+      border-right-color: transparent;
+    }
+    .sidenav--dark .sidenav__item--active {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+    .sidenav--dark .sidenav__item { color: var(--text-primary); }
+    .sidenav--dark .sidenav__item--active { color: var(--text-primary); }
+    .sidenav--dark .sidenav__item:hover:not(.sidenav__item--active) {
+      background-color: rgba(0, 0, 0, 0.06);
+    }
+
+    .app__sidebar { flex-shrink: 0; }
+
+    .app__panel {
+      flex: 1; min-width: 0;
+      margin: 16px;
+      height: calc(100vh - 32px);
+      border-radius: 24px;
+      border: 2px solid rgba(255,255,255,0.85);
+      background: white;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ============================================================
+       Page header — ARB pattern (detail-header + detail-tabs-wrap)
+    ============================================================ */
+    .detail-header {
+      padding: 24px 24px 0;
+      flex-shrink: 0;
+      background: var(--surface-primary);
+    }
+
+    .detail-header__top {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: 4px;
+    }
+
+    .detail-header__title {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+      margin: 0;
+      line-height: var(--line-height-tight);
+      flex: 1;
+    }
+
+    .detail-header__meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      color: var(--text-secondary);
+      flex-wrap: wrap;
+      padding-left: 42px;
+      padding-bottom: 16px;
+    }
+
+    .detail-header__meta b {
+      color: var(--text-primary);
+      font-weight: var(--font-weight-medium);
+    }
+
+    .detail-header__meta-dot {
+      width: 3px;
+      height: 3px;
+      border-radius: 9999px;
+      background-color: var(--text-tertiary);
+      flex-shrink: 0;
+    }
+
+    .detail-header__meta-risk-dot {
+      display: inline-block;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--dv-orange-5);
+    }
+
+    .detail-header__agents {
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .detail-header__agent-avatar {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px;
+      border-radius: 9999px;
+      background-color: var(--color-neutral-800);
+      color: white;
+      font-family: var(--font-sans);
+      font-size: 9px;
+      font-weight: var(--font-weight-semibold);
+      border: 1.5px solid var(--surface-primary);
+      margin-left: -6px;
+    }
+    .detail-header__agent-avatar:first-child { margin-left: 4px; }
+
+    /* Tabs wrap — ARB styling (teal strip with borders) */
+    .detail-tabs-wrap {
+      flex-shrink: 0;
+    }
+    .detail-tabs-wrap .tabs {
+      padding: 0 24px;
+    }
+
+    /* ============================================================
+       Body (grey canvas that contains cards)
+    ============================================================ */
+    .appdetail-body {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 20px 24px 32px;
+      background: var(--bg-secondary);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .appdetail-body > * { flex-shrink: 0; }
+
+    /* ============================================================
+       .card — inlined from components/card.html
+    ============================================================ */
+    .card {
+      background: var(--bg-primary);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .card__header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-3);
+      padding: var(--space-4) var(--space-4) var(--space-3);
+      flex-shrink: 0;
+    }
+    .card__header-text {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+    .card__title {
+      font-family: var(--font-sans);
+      font-size: 16px;
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+      margin: 0;
+      line-height: var(--line-height-tight);
+    }
+    .card__subtitle {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      color: var(--text-tertiary);
+      margin: 0;
+      line-height: var(--line-height-normal);
+    }
+    .card__header-action {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+      flex-shrink: 0;
+    }
+    .card__body {
+      padding: 0 var(--space-4) var(--space-4);
+      flex: 1;
+      min-height: 0;
+    }
+    .card__insight {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-2);
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+      background: #f4fcf0;
+      border-radius: var(--radius-lg);
+      padding: var(--space-3);
+      line-height: var(--line-height-relaxed);
+      margin-bottom: var(--space-4);
+    }
+    .card__insight [data-icon] {
+      width: 14px; height: 14px;
+      color: var(--color-accent, var(--color-success));
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+    .card__metric-label {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-normal);
+      color: var(--text-tertiary);
+      margin: 0 0 var(--space-2);
+      text-transform: none;
+    }
+    .card__metric-value {
+      font-family: var(--font-sans);
+      font-size: 26px;
+      font-weight: var(--font-weight-bold);
+      color: var(--text-primary);
+      line-height: var(--line-height-tight);
+      letter-spacing: -0.02em;
+      margin: 0 0 var(--space-2);
+    }
+    .card__metric-support {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      color: var(--text-secondary);
+      line-height: var(--line-height-relaxed);
+      margin: 0;
+    }
+
+    /* ============================================================
+       KPI row
+    ============================================================ */
+    .appdetail-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .appdetail-kpi {
+      background: var(--surface-primary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+    }
+
+    /* ============================================================
+       Two-column grid — recommended actions + migration plan
+    ============================================================ */
+    .appdetail-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .appdetail-section-title {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+      margin: 0 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    /* ============================================================
+       Primary action card (green left-border)
+    ============================================================ */
+    .appdetail-action {
+      background: var(--surface-primary);
+      border: 1px solid var(--color-success);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-success) 10%, transparent);
+    }
+    .appdetail-action__header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    .appdetail-action__header-icon {
+      display: inline-flex;
+      width: 20px; height: 20px;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-success);
+    }
+    .appdetail-action__title {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+      margin: 0 0 6px;
+    }
+    .appdetail-action__body {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+      line-height: var(--line-height-relaxed);
+      margin: 0 0 16px;
+    }
+    .appdetail-action__body a {
+      color: var(--color-link);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .appdetail-action__actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* Chip row below primary action */
+    .appdetail-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0 20px;
+    }
+
+    /* ============================================================
+       Secondary action cards
+    ============================================================ */
+    .appdetail-secondary {
+      background: var(--surface-primary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+    .appdetail-secondary__header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .appdetail-secondary__title {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+      margin: 0;
+    }
+    .appdetail-secondary__body {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+      line-height: var(--line-height-relaxed);
+      margin: 0 0 10px;
+    }
+    .appdetail-secondary__link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-link);
+      text-decoration: none;
+    }
+    .appdetail-secondary__link:hover { text-decoration: underline; }
+
+    /* ============================================================
+       Migration plan sidebar
+    ============================================================ */
+    .appdetail-sidebar {
+      background: var(--surface-primary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      padding: 18px 20px 22px;
+      box-shadow: var(--shadow-sm);
+    }
+    .appdetail-sidebar__header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .appdetail-sidebar__title {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+      margin: 0;
+      flex: 1;
+    }
+    .appdetail-sidebar__progress {
+      margin-bottom: 20px;
+    }
+    .appdetail-sidebar__progress-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      color: var(--text-tertiary);
+      margin-top: 6px;
+    }
+    .appdetail-sidebar__link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 16px;
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+    .appdetail-sidebar__link [data-icon] { width: 14px; height: 14px; }
+
+    /* ============================================================
+       .progress-bar — inlined from components/progress.html
+    ============================================================ */
+    .progress-bar {
+      position: relative;
+      height: 8px;
+      border-radius: 9999px;
+      background-color: var(--color-neutral-200, #edece9);
+      overflow: visible;
+    }
+    .progress-bar__fill {
+      height: 100%;
+      border-radius: 9999px;
+      position: relative;
+      transition: width 0.4s ease;
+      min-width: 8px;
+    }
+    .progress-bar__fill--success {
+      background-color: var(--color-success, #16a34a);
+    }
+
+    /* ============================================================
+       Vertical timeline — inlined from components/timeline.html
+    ============================================================ */
+    .tl-mark {
+      width: 28px; height: 28px;
+      border-radius: 9999px;
+      background-color: var(--color-neutral-800, #343331);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .tl-mark [data-icon] {
+      width: 14px; height: 14px;
+      color: white;
+    }
+    .tl-mark--active {
+      background-color: var(--color-error);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 20%, transparent);
+    }
+    .tl-mark--pending {
+      background-color: var(--color-neutral-200, #edece9);
+    }
+    .tl-mark--pending [data-icon] { color: var(--text-tertiary); }
+
+    .tl-connector {
+      background-color: var(--color-neutral-300, #e3e2df);
+      flex-shrink: 0;
+    }
+    .tl-connector--completed {
+      background-color: var(--color-neutral-800, #343331);
+    }
+
+    .tl-content__label {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+    }
+    .tl-content__label--active { color: var(--color-error); }
+    .tl-content__label--pending { color: var(--text-secondary); font-weight: var(--font-weight-normal); }
+    .tl-content__sublabel {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+
+    .timeline-v { display: flex; flex-direction: column; gap: 0; }
+    .timeline-v__step {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .timeline-v__track {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .timeline-v .tl-connector {
+      width: 2px;
+      height: 22px;
+    }
+    .timeline-v__content {
+      flex: 1;
+      padding-top: 4px;
+      padding-bottom: 12px;
+    }
+    .timeline-v__step:last-child .timeline-v__content { padding-bottom: 0; }
+
+    /* ============================================================
+       App Relationship Diagram
+    ============================================================ */
+    .rel-diagram {
+      display: flex;
+      height: 700px;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: var(--surface-primary);
+    }
+    .rel-canvas {
+      flex: 1;
+      position: relative;
+      min-width: 0;
+      background: var(--bg-secondary);
+    }
+    .rel-canvas__lines {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+    .rel-nodes { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+    .rel-zone {
+      position: absolute;
+      font-family: var(--font-sans);
+      font-size: 10px;
+      font-weight: var(--font-weight-semibold);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: var(--text-tertiary);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .rel-node {
+      position: absolute;
+      background: var(--surface-primary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 8px 12px;
+      cursor: pointer;
+      transform: translate(-50%, -50%);
+      transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s;
+      font-family: var(--font-sans);
+      user-select: none;
+      min-width: 140px;
+      max-width: 240px;
+      text-align: left;
+    }
+    .rel-node:hover {
+      box-shadow: var(--shadow-sm);
+      border-color: var(--text-tertiary);
+      transform: translate(-50%, -50%) scale(1.02);
+    }
+    .rel-node.is-selected {
+      border-color: var(--text-primary);
+      border-width: 1.5px;
+      box-shadow: var(--shadow-sm);
+    }
+    .rel-node--focal {
+      background: var(--text-primary);
+      border-color: var(--text-primary);
+      z-index: 10;
+      min-width: 160px;
+      padding: 10px 14px;
+    }
+    .rel-node--focal:hover { transform: translate(-50%, -50%) scale(1.02); }
+    .rel-node__name {
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+      line-height: var(--line-height-tight);
+    }
+    .rel-node--focal .rel-node__name {
+      color: white;
+      font-size: var(--font-size-base);
+    }
+    .rel-node__type {
+      font-size: 10px;
+      font-weight: var(--font-weight-semibold);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+    .rel-node--focal .rel-node__type {
+      color: rgba(255,255,255,0.7);
+    }
+    .rel-node__health {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .rel-node__dot {
+      width: 7px; height: 7px;
+      border-radius: 9999px;
+      flex-shrink: 0;
+    }
+    .rel-node__dot--success { background: var(--color-success); }
+    .rel-node__dot--warning { background: var(--dv-orange-5, #d97706); }
+    .rel-node__dot--error { background: var(--color-error); }
+    .rel-node__dot--neutral { background: var(--color-neutral-400, #c2c1be); }
+    .rel-node__status {
+      font-size: 11px;
+      font-weight: var(--font-weight-medium);
+      color: var(--text-secondary);
+    }
+
+    /* ============================================================
+       Right Panel — fixed floating overlay (pattern from EA_Moment_4)
+    ============================================================ */
+    .right-panel {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      bottom: 12px;
+      width: 380px;
+      z-index: 300;
+      pointer-events: none;
+      transform: translateX(calc(100% + 20px));
+      transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .right-panel--open {
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+    .right-panel__inner {
+      width: 100%;
+      height: 100%;
+      background: var(--bg-primary, #ffffff);
+      border-radius: 16px;
+      box-shadow:
+        0 4px 6px -1px rgba(0,0,0,0.07),
+        0 12px 32px -4px rgba(0,0,0,0.14),
+        0 0 0 1px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .right-panel__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 14px 14px 20px;
+      border-bottom: 1px solid var(--border-subtle, #e8e7e4);
+      flex-shrink: 0;
+      gap: 12px;
+    }
+    .right-panel__title-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .right-panel__type-label {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: var(--font-weight-semibold, 600);
+      color: var(--text-tertiary, #8a8986);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .right-panel__name {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-base, 14px);
+      font-weight: var(--font-weight-semibold, 600);
+      color: var(--text-primary, #1a1a18);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .right-panel__actions {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--border-subtle, #e3e2df);
+      border-radius: 9999px;
+      padding: 2px;
+      gap: 0;
+      flex-shrink: 0;
+    }
+    .right-panel__btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border: none;
+      border-radius: 9999px;
+      background: transparent;
+      color: var(--text-tertiary, #8a8986);
+      cursor: pointer;
+      transition: background-color 0.15s ease, color 0.15s ease;
+      padding: 0;
+    }
+    .right-panel__btn:hover {
+      background-color: var(--bg-secondary, #f5f5f3);
+      color: var(--text-primary, #1a1a18);
+    }
+    .right-panel__btn [data-icon] {
+      width: 15px;
+      height: 15px;
+      display: flex;
+    }
+    .right-panel__body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .right-panel__body::-webkit-scrollbar { width: 4px; }
+    .right-panel__body::-webkit-scrollbar-track { background: transparent; }
+    .right-panel__body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 9999px; }
+
+    /* ============================================================
+       Right-panel content (rp-*) — pattern from EA_Moment_4
+    ============================================================ */
+    .rp-section-heading {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+      margin: 0 0 8px;
+    }
+    .rp-card {
+      background: var(--bg-secondary, #f4f3f0);
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .rp-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      font-family: var(--font-sans);
+      font-size: 14px;
+    }
+    .rp-row__label {
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+    }
+    .rp-row__value {
+      color: var(--text-primary);
+      font-weight: var(--font-weight-semibold);
+      text-align: right;
+    }
+    .rp-note {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin: 0;
+    }
+    .rp-action {
+      display: block;
+      width: 100%;
+      margin-top: 4px;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: var(--font-weight-medium);
+      color: white;
+      background: var(--text-primary);
+      border-radius: 10px;
+      padding: 10px 12px;
+      text-align: center;
+      border: none;
+      cursor: pointer;
+    }
+    .rp-action:hover { opacity: 0.9; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Sidebar -->
+  <div class="app__sidebar">
+    <div data-component="appowner-sidenav"></div>
+  </div>
+
+  <!-- Main panel -->
+  <div class="app__panel">
+
+    <!-- Header -->
+    <div class="detail-header">
+      <div class="detail-header__top">
+        <a href="AppOwner_myapps.html" class="panel-back-btn" aria-label="Back to My apps">
+          <span data-icon="chevron-left"></span>
+        </a>
+        <h1 class="detail-header__title">Mural</h1>
+        <button class="btn btn-ghost btn-sm">
+          Actions
+          <span data-icon="chevron-down"></span>
+        </button>
+      </div>
+      <div class="detail-header__meta">
+        <span>Owner <b>Jenny Kim</b></span>
+        <span class="detail-header__meta-dot"></span>
+        <span>Whiteboarding</span>
+        <span class="detail-header__meta-dot"></span>
+        <span class="badge badge--warning-tertiary">Migrate → Miro</span>
+        <span class="detail-header__meta-dot"></span>
+        <span>Risk <span class="detail-header__meta-risk-dot"></span> <b>Medium</b></span>
+        <span class="detail-header__meta-dot"></span>
+        <span>Migration window <b>Q1 2026</b></span>
+        <span class="detail-header__meta-dot"></span>
+        <span>AI Agents</span>
+        <span class="detail-header__agents">
+          <span class="detail-header__agent-avatar">OT</span>
+          <span class="detail-header__agent-avatar">MA</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="detail-tabs-wrap">
+      <div class="tabs">
+        <button class="tab tab--active">
+          <span data-icon="ai-sparkle"></span>
+          Overview
+        </button>
+        <button class="tab">Full record</button>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="appdetail-body">
+
+      <!-- Insights card -->
+      <section class="card">
+        <div class="card__header">
+          <div class="card__header-text">
+            <h2 class="card__title">What you should know</h2>
+          </div>
+          <div class="card__header-action">
+            <button class="btn btn-ghost btn-sm">
+              Review with AI
+              <span data-icon="chevron-down"></span>
+            </button>
+          </div>
+        </div>
+        <div class="card__body">
+          <div class="appdetail-kpis">
+
+            <div class="appdetail-kpi">
+              <div class="card__metric-label">Users</div>
+              <div class="card__metric-value">890</div>
+              <div class="card__metric-support" style="color: var(--color-error);">↓ 12% QoQ adoption</div>
+            </div>
+
+            <div class="appdetail-kpi">
+              <div class="card__metric-label">Annual cost</div>
+              <div class="card__metric-value">$67K</div>
+              <div class="card__metric-support" style="color: var(--color-success);">Save $67K if migrated</div>
+            </div>
+
+            <div class="appdetail-kpi">
+              <div class="card__metric-label">Migration window</div>
+              <div class="card__metric-value">Q1 2026</div>
+              <div class="card__metric-support">~75 days to start</div>
+            </div>
+
+            <div class="appdetail-kpi">
+              <div class="card__metric-label">Risk</div>
+              <div class="card__metric-value">Medium</div>
+              <div class="card__metric-support">Training gap on Miro</div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- App relationships -->
+      <section class="card">
+        <div class="card__header">
+          <div class="card__header-text">
+            <h2 class="card__title">App relationships</h2>
+            <p class="card__subtitle">Business capabilities Mural enables · Application services, technology, software and hardware it runs on</p>
+          </div>
+        </div>
+        <div class="card__body">
+          <div class="rel-diagram">
+            <div class="rel-canvas">
+              <canvas class="rel-canvas__lines" id="rel-lines"></canvas>
+              <div class="rel-nodes" id="rel-nodes"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Two-column: recommended actions + migration plan -->
+      <div class="appdetail-grid">
+
+        <!-- Left: Recommended actions -->
+        <section>
+          <h2 class="appdetail-section-title">
+            <span>Recommended actions</span>
+            <span class="badge badge--success-tertiary">Backed by rationalization review</span>
+          </h2>
+
+          <!-- Primary action card -->
+          <div class="appdetail-action">
+            <div class="appdetail-action__header">
+              <span class="appdetail-action__header-icon"><span data-icon="check-strong"></span></span>
+              <span>Decision</span>
+              <span class="badge badge--success-tertiary">87% confidence</span>
+              <span class="badge badge--neutral-tertiary">Est. 10 min</span>
+            </div>
+            <h3 class="appdetail-action__title">Approve Mural → Miro migration plan</h3>
+            <p class="appdetail-action__body">
+              Otto drafted the Q1 <a href="#">migration runbook</a>. Miro license covers all 890 users; training videos mapped to Mural workflow equivalents. Comms-out by Dec preserves the <a href="#">Q1 migration window</a>.
+            </p>
+            <div class="appdetail-action__actions">
+              <button class="btn btn-ghost">Skip</button>
+              <button class="btn btn-primary">Approve plan</button>
+            </div>
+          </div>
+
+          <!-- Chip suggestions -->
+          <div class="appdetail-chips">
+            <button class="pill pill--sm">What if we delay?</button>
+            <button class="pill pill--sm">Show Miro coverage</button>
+            <button class="pill pill--sm">Training plan</button>
+          </div>
+
+          <!-- Secondary action 1 -->
+          <div class="appdetail-secondary">
+            <div class="appdetail-secondary__header">
+              <h3 class="appdetail-secondary__title">Notify 890 affected users</h3>
+              <span class="badge badge--error-tertiary">30 days</span>
+            </div>
+            <p class="appdetail-secondary__body">
+              Otto drafted a migration announcement referencing Miro access, the Q1 timeline, and training resources.
+            </p>
+            <a href="#" class="appdetail-secondary__link">Preview AI draft</a>
+          </div>
+
+          <!-- Secondary action 2 -->
+          <div class="appdetail-secondary">
+            <div class="appdetail-secondary__header">
+              <h3 class="appdetail-secondary__title">Prepare executive alignment brief</h3>
+              <span class="badge badge--neutral-tertiary">Post decision</span>
+            </div>
+            <p class="appdetail-secondary__body">
+              $67K savings at stake. In past migrations, exec comms within 72h preserved user trust and adoption momentum.
+            </p>
+            <a href="#" class="appdetail-secondary__link">Preview AI brief</a>
+          </div>
+
+        </section>
+
+        <!-- Right: Migration plan sidebar -->
+        <aside class="appdetail-sidebar">
+          <div class="appdetail-sidebar__header">
+            <h2 class="appdetail-sidebar__title">Migration plan</h2>
+            <span class="badge badge--success-tertiary">On Track</span>
+            <span data-icon="chevron-down" style="color: var(--text-tertiary);"></span>
+          </div>
+
+          <div class="appdetail-sidebar__progress">
+            <div class="progress-bar">
+              <div class="progress-bar__fill progress-bar__fill--success" style="width: 50%;"></div>
+            </div>
+            <div class="appdetail-sidebar__progress-label">
+              <span>3 of 6 completed</span>
+              <span>~75 days remaining</span>
+            </div>
+          </div>
+
+          <div class="timeline-v">
+
+            <!-- Step 1 - completed -->
+            <div class="timeline-v__step">
+              <div class="timeline-v__track">
+                <div class="tl-mark"><span data-icon="check"></span></div>
+                <div class="tl-connector tl-connector--completed"></div>
+              </div>
+              <div class="timeline-v__content">
+                <div class="tl-content__label">Portfolio review completed</div>
+                <div class="tl-content__sublabel">Flagged for rationalization Oct 2025</div>
+              </div>
+            </div>
+
+            <!-- Step 2 - completed -->
+            <div class="timeline-v__step">
+              <div class="timeline-v__track">
+                <div class="tl-mark"><span data-icon="check"></span></div>
+                <div class="tl-connector tl-connector--completed"></div>
+              </div>
+              <div class="timeline-v__content">
+                <div class="tl-content__label">Miro license coverage verified</div>
+                <div class="tl-content__sublabel">All 890 users covered by existing license</div>
+              </div>
+            </div>
+
+            <!-- Step 3 - completed -->
+            <div class="timeline-v__step">
+              <div class="timeline-v__track">
+                <div class="tl-mark"><span data-icon="check"></span></div>
+                <div class="tl-connector"></div>
+              </div>
+              <div class="timeline-v__content">
+                <div class="tl-content__label">Stakeholder sign-off</div>
+                <div class="tl-content__sublabel">Collaboration Lead approved</div>
+              </div>
+            </div>
+
+            <!-- Step 4 - active/current -->
+            <div class="timeline-v__step">
+              <div class="timeline-v__track">
+                <div class="tl-mark tl-mark--active"><span data-icon="triangle-exclamation"></span></div>
+                <div class="tl-connector"></div>
+              </div>
+              <div class="timeline-v__content">
+                <div class="tl-content__label tl-content__label--active">Approve migration plan</div>
+                <div class="tl-content__sublabel">Due Dec 2025</div>
+              </div>
+            </div>
+
+            <!-- Step 5 - pending -->
+            <div class="timeline-v__step">
+              <div class="timeline-v__track">
+                <div class="tl-mark tl-mark--pending"><span data-icon="circle"></span></div>
+                <div class="tl-connector"></div>
+              </div>
+              <div class="timeline-v__content">
+                <div class="tl-content__label tl-content__label--pending">User migration + training</div>
+                <div class="tl-content__sublabel">890 users · Q1 2026</div>
+              </div>
+            </div>
+
+            <!-- Step 6 - pending -->
+            <div class="timeline-v__step">
+              <div class="timeline-v__track">
+                <div class="tl-mark tl-mark--pending"><span data-icon="circle"></span></div>
+              </div>
+              <div class="timeline-v__content">
+                <div class="tl-content__label tl-content__label--pending">Mural account closure</div>
+                <div class="tl-content__sublabel">End of Q1 2026</div>
+              </div>
+            </div>
+
+          </div>
+
+          <a href="#" class="appdetail-sidebar__link">
+            All migration steps
+            <span data-icon="chevron-right"></span>
+          </a>
+        </aside>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    Horizon.mountComponents();
+    Horizon.initIcons();
+
+    const sidenav = document.getElementById('sidenav-main');
+    if (sidenav) {
+      sidenav.classList.remove('sidenav--collapsed');
+      sidenav.querySelector('.sidenav__menu-btn').addEventListener('click', () => {
+        sidenav.classList.toggle('sidenav--collapsed');
+      });
+      sidenav.querySelectorAll('.sidenav__item').forEach(i => i.classList.remove('sidenav__item--active'));
+      const myAppsLink = sidenav.querySelector('a[href$="AppOwner_myapps.html"]');
+      if (myAppsLink) myAppsLink.classList.add('sidenav__item--active');
+    }
+
+    // Tab switching (visual only — no real tab content yet)
+    document.querySelectorAll('.detail-tabs-wrap .tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.detail-tabs-wrap .tab').forEach(t => t.classList.remove('tab--active'));
+        tab.classList.add('tab--active');
+      });
+    });
+  });
+</script>
+
+<script>
+  // App relationship diagram — Mural
+  const MURAL_REL = {
+    focal: {
+      name: 'Mural',
+      type: 'Whiteboarding · Migrate to Miro',
+      users: '890', cost: '$67K/yr', window: 'Q1 2026',
+      rows: [
+        { label: 'Owner', value: 'Jenny Kim' },
+        { label: 'Capability', value: 'Whiteboarding' },
+        { label: 'Active users', value: '890' },
+        { label: 'Annual cost', value: '$67K/yr' },
+        { label: 'Migration window', value: 'Q1 2026' },
+        { label: 'Risk', value: 'Medium' },
+      ],
+      sections: [
+        { heading: 'Why migrate', body: 'Adoption is down 12% QoQ while Miro already covers 3,100 users on an existing license. Migrating Mural users into Miro saves $67K annually and eliminates a redundant whiteboarding tool in the portfolio.' },
+        { heading: 'Migration target', body: 'Miro has 1:1 template mapping for Mural workflows. License covers all 890 users with no additional spend. Training materials and migration runbook drafted by Otto.' },
+        { heading: 'Next action', body: 'Approve the Q1 migration plan. User comms must go out by December to preserve the Q1 migration window.' },
+      ],
+    },
+    upstream: [
+      {
+        name: 'Design Collaboration', type: 'Business Capability',
+        dot: 'warning', status: 'Partial', users: '430', dep: 'Medium',
+        rows: [
+          { label: 'Capability owner', value: 'Design & UX' },
+          { label: 'Active users', value: '430' },
+          { label: 'Dependency', value: 'Medium' },
+          { label: 'Status', value: 'Partial coverage' },
+        ],
+        sections: [
+          { heading: 'How Mural enables this', body: 'Design & UX teams use Mural for live design critiques and collaborative mockups across product squads.' },
+          { heading: 'Miro coverage', body: '1:1 template mapping for design crit boards. Sticky-note collaboration and visual canvas behave the same in Miro.' },
+          { heading: 'Migration impact', body: 'Brief learning curve expected for visual mockup tooling. UX leads scheduled for hands-on training in Q1.' },
+        ],
+      },
+      {
+        name: 'Workshop Facilitation', type: 'Business Capability',
+        dot: 'success', status: 'Covered', users: '620', dep: 'High',
+        rows: [
+          { label: 'Capability owner', value: 'Collaboration' },
+          { label: 'Active users', value: '620' },
+          { label: 'Dependency', value: 'High' },
+          { label: 'Status', value: 'Covered' },
+        ],
+        sections: [
+          { heading: 'How Mural enables this', body: 'Cross-functional Q-planning, retrospectives, and team workshops run on Mural boards. Highest-volume capability tied to Mural.' },
+          { heading: 'Miro coverage', body: 'Workshop templates already mapped 1:1. Facilitator playbooks updated. No capability gap on migration.' },
+          { heading: 'Migration impact', body: 'Zero downtime expected. Teams can run workshops in Miro from day 1 of cutover.' },
+        ],
+      },
+      {
+        name: 'Customer Journey Mapping', type: 'Business Capability',
+        dot: 'warning', status: 'At risk', users: '180', dep: 'Medium',
+        rows: [
+          { label: 'Capability owner', value: 'Product' },
+          { label: 'Active users', value: '180' },
+          { label: 'Dependency', value: 'Medium' },
+          { label: 'Status', value: 'At risk' },
+        ],
+        sections: [
+          { heading: 'How Mural enables this', body: '12 active customer journey maps live in Mural and are referenced weekly by Product and Research teams.' },
+          { heading: 'Migration risk', body: 'Journey maps must be exported before decommission. Miro templates preserve the visual structure but not all sticky-note metadata.' },
+          { heading: 'Action needed', body: 'Product team owns the export. All 12 boards must be migrated to Miro by Dec 15 to stay on plan.' },
+        ],
+        action: 'Export boards →',
+      },
+    ],
+    downstream: [
+      {
+        name: 'Okta SSO', type: 'Application Service',
+        dot: 'success', status: 'Healthy', dep: 'Critical',
+        rows: [
+          { label: 'Owner', value: 'IT Identity' },
+          { label: 'Dependency', value: 'Critical' },
+          { label: 'Status', value: 'Healthy' },
+        ],
+        sections: [
+          { heading: 'Relationship with Mural', body: 'All Mural logins flow through Okta SSO. Identity, group provisioning, and MFA are managed centrally.' },
+          { heading: 'Decommission impact', body: 'Deprovisioning the Mural app in Okta disables access on the cutover date. No separate user-cleanup work required.' },
+        ],
+      },
+      {
+        name: 'Mural REST API', type: 'Application Service',
+        dot: 'neutral', status: 'Read-only', dep: 'Low',
+        rows: [
+          { label: 'Owner', value: 'Vendor (Mural)' },
+          { label: 'Dependency', value: 'Low' },
+          { label: 'Status', value: 'Read-only' },
+        ],
+        sections: [
+          { heading: 'Relationship with Mural', body: 'Used only for nightly board exports into the IT data lake. No other internal systems consume this API.' },
+          { heading: 'Decommission impact', body: 'Nightly exports stop on cutover. No downstream system breaks. A final archive is taken the night before decommission.' },
+        ],
+      },
+      {
+        name: 'AWS US-East', type: 'Technology',
+        dot: 'success', status: 'Healthy', dep: 'Vendor-managed',
+        rows: [
+          { label: 'Vendor', value: 'AWS (managed by Mural)' },
+          { label: 'Dependency', value: 'Vendor-managed' },
+          { label: 'Status', value: 'Healthy' },
+        ],
+        sections: [
+          { heading: 'Relationship with Mural', body: 'Mural is hosted on AWS US-East-1 by the vendor. No dedicated infrastructure on internal AWS.' },
+          { heading: 'Decommission impact', body: 'No direct work required from IT. The vendor terminates the tenant on contract close.' },
+        ],
+      },
+      {
+        name: 'Mural Web + Desktop', type: 'Software',
+        dot: 'success', status: 'Current', dep: 'Medium',
+        rows: [
+          { label: 'Owner', value: 'IT End-user Tech' },
+          { label: 'Power users', value: '~90 (desktop)' },
+          { label: 'Dependency', value: 'Medium' },
+        ],
+        sections: [
+          { heading: 'Relationship with Mural', body: '~90 power users have the desktop client installed via Jamf and Intune. The remaining 800 users are on the web client.' },
+          { heading: 'Decommission action', body: 'Uninstall profile must be staged in Jamf and Intune ahead of the decommission date so the desktop client clears at cutover.' },
+        ],
+      },
+      {
+        name: 'User Workstations', type: 'Hardware',
+        dot: 'neutral', status: '890 endpoints', dep: 'Low',
+        rows: [
+          { label: 'Owner', value: 'IT Ops' },
+          { label: 'Endpoints', value: '890' },
+          { label: 'Dependency', value: 'Low' },
+        ],
+        sections: [
+          { heading: 'Relationship with Mural', body: 'Mac and Windows endpoints managed by IT Ops. No special configuration tied to Mural.' },
+          { heading: 'Decommission action', body: 'MDM handles desktop client uninstall at cutover. No manual touch required on individual machines.' },
+        ],
+      },
+    ],
+    integrations: [
+      {
+        name: 'Miro', type: 'Migration Target',
+        dot: 'success', status: 'Ready', dep: 'Target',
+        rows: [
+          { label: 'Type', value: 'SaaS · Whiteboarding' },
+          { label: 'License coverage', value: '3,100 users' },
+          { label: 'Dependency', value: 'Migration target' },
+          { label: 'Status', value: 'Ready' },
+        ],
+        sections: [
+          { heading: 'Migration role', body: 'Miro is the destination platform for all 890 Mural users. The existing Miro org will absorb the new users without additional license purchase.' },
+          { heading: 'Readiness', body: 'License provisioned. Workflow templates mapped 1:1. Training materials translated. Migration runbook drafted by Otto.' },
+          { heading: 'Open items', body: '12 customer journey maps still need to be exported from Mural before cutover. Product team owns this task.' },
+        ],
+        action: 'View migration plan →',
+      },
+    ],
+  };
+
+  function renderRelDiagram() {
+    const area = document.querySelector('.rel-canvas');
+    const nodesEl = document.getElementById('rel-nodes');
+    if (!area || !nodesEl) return;
+
+    nodesEl.innerHTML = '';
+    const W = area.offsetWidth;
+    const H = area.offsetHeight;
+
+    const focalX = W * 0.44;
+    const focalY = H * 0.5;
+    const upY = H * 0.15;
+    const downY1 = H * 0.72;
+    const downY2 = H * 0.93;
+    const intX = Math.min(W - 90, W * 0.88);
+
+    // zone labels
+    addRelLabel(nodesEl, 'Upstream — Business capabilities', focalX - 130, upY - 74);
+    addRelLabel(nodesEl, 'Downstream — App service · Technology · Software · Hardware', focalX - 200, downY1 - 40);
+    addRelLabel(nodesEl, 'Integrations', intX - 40, focalY - 80);
+
+    const allNodes = [];
+
+    // focal
+    const focal = makeRelNode({ id: 'focal', isFocal: true, x: focalX, y: focalY, data: MURAL_REL.focal });
+    nodesEl.appendChild(focal);
+    allNodes.push({ el: focal, x: focalX, y: focalY, id: 'focal', zone: 'focal' });
+
+    // upstream row
+    const up = MURAL_REL.upstream;
+    const upSpacing = Math.min(320, (W * 0.85) / Math.max(1, up.length));
+    const upStartX = focalX - (up.length - 1) * upSpacing / 2;
+    up.forEach((n, i) => {
+      const x = upStartX + i * upSpacing;
+      const el = makeRelNode({ id: 'up-' + i, x, y: upY, zone: 'upstream', data: n });
+      nodesEl.appendChild(el);
+      allNodes.push({ el, x, y: upY, id: 'up-' + i, zone: 'upstream' });
+    });
+
+    // downstream - 3 per row, remaining on second row
+    const down = MURAL_REL.downstream;
+    const perRow = 3;
+    down.forEach((n, i) => {
+      const row = Math.floor(i / perRow);
+      const rowCount = Math.min(perRow, down.length - row * perRow);
+      const idxInRow = i % perRow;
+      const spacing = Math.min(300, (W * 0.85) / Math.max(1, rowCount));
+      const startX = focalX - (rowCount - 1) * spacing / 2;
+      const x = startX + idxInRow * spacing;
+      const y = row === 0 ? downY1 : downY2;
+      const el = makeRelNode({ id: 'down-' + i, x, y, zone: 'downstream', data: n });
+      nodesEl.appendChild(el);
+      allNodes.push({ el, x, y, id: 'down-' + i, zone: 'downstream' });
+    });
+
+    // integrations
+    const ints = MURAL_REL.integrations;
+    const intSpacingY = 80;
+    const intStartY = focalY - (ints.length - 1) * intSpacingY / 2;
+    ints.forEach((n, i) => {
+      const y = intStartY + i * intSpacingY;
+      const el = makeRelNode({ id: 'int-' + i, x: intX, y, zone: 'integration', data: n });
+      nodesEl.appendChild(el);
+      allNodes.push({ el, x: intX, y, id: 'int-' + i, zone: 'integration' });
+    });
+
+    requestAnimationFrame(() => drawRelLines(allNodes, focalX, focalY));
+  }
+
+  function addRelLabel(container, text, x, y) {
+    const el = document.createElement('div');
+    el.className = 'rel-zone';
+    el.textContent = text;
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    container.appendChild(el);
+  }
+
+  function makeRelNode({ id, x, y, isFocal, zone, data }) {
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'rel-node' + (isFocal ? ' rel-node--focal' : '');
+    el.id = 'rel-node-' + id;
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+
+    if (isFocal) {
+      el.innerHTML =
+        '<div class="rel-node__name">' + data.name + '</div>' +
+        '<div class="rel-node__type">' + data.type + '</div>';
+    } else {
+      el.innerHTML =
+        '<div class="rel-node__name">' + data.name + '</div>' +
+        '<div class="rel-node__type">' + data.type + '</div>' +
+        '<div class="rel-node__health">' +
+          '<span class="rel-node__dot rel-node__dot--' + data.dot + '"></span>' +
+          '<span class="rel-node__status">' + data.status + '</span>' +
+        '</div>';
+    }
+
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.rel-node').forEach(n => n.classList.remove('is-selected'));
+      el.classList.add('is-selected');
+      if (isFocal) showRelFocalDetail(data);
+      else showRelNodeDetail(data, zone);
+    });
+
+    return el;
+  }
+
+  function drawRelLines(nodes, focalX, focalY) {
+    const canvas = document.getElementById('rel-lines');
+    const area = document.querySelector('.rel-canvas');
+    if (!canvas || !area) return;
+    canvas.width = area.offsetWidth;
+    canvas.height = area.offsetHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    nodes.forEach(n => {
+      if (n.zone === 'focal') return;
+      const isUp = n.zone === 'upstream';
+      const isInt = n.zone === 'integration';
+
+      let color, dash;
+      if (isUp) { color = '#94a3b8'; dash = []; }
+      else if (isInt) { color = '#60a5fa'; dash = [5, 4]; }
+      else { color = '#86c8a1'; dash = []; }
+
+      let fromX, fromY, toX, toY;
+      if (isUp) {
+        fromX = n.x; fromY = n.y + 30;
+        toX = focalX; toY = focalY - 36;
+      } else if (isInt) {
+        fromX = focalX + 82; fromY = focalY;
+        toX = n.x - 72; toY = n.y;
+      } else {
+        fromX = focalX; fromY = focalY + 36;
+        toX = n.x; toY = n.y - 30;
+      }
+
+      ctx.beginPath();
+      ctx.setLineDash(dash);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      if (isInt) {
+        const midX = (fromX + toX) / 2;
+        ctx.moveTo(fromX, fromY);
+        ctx.bezierCurveTo(midX, fromY, midX, toY, toX, toY);
+      } else {
+        const midY = (fromY + toY) / 2;
+        ctx.moveTo(fromX, fromY);
+        ctx.bezierCurveTo(fromX, midY, toX, midY, toX, toY);
+      }
+      ctx.stroke();
+
+      // arrowhead
+      ctx.setLineDash([]);
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      const size = 5;
+      if (isInt) {
+        ctx.moveTo(toX, toY);
+        ctx.lineTo(toX - size, toY - size * 0.7);
+        ctx.lineTo(toX - size, toY + size * 0.7);
+      } else {
+        ctx.moveTo(toX, toY);
+        ctx.lineTo(toX - size * 0.7, toY - size);
+        ctx.lineTo(toX + size * 0.7, toY - size);
+      }
+      ctx.closePath();
+      ctx.fill();
+    });
+  }
+
+  function openRelPanel(typeLabel, name, bodyHTML) {
+    const panel = document.getElementById('rel-right-panel');
+    document.getElementById('rel-rp-type-label').textContent = typeLabel;
+    document.getElementById('rel-rp-name').textContent = name;
+    document.getElementById('rel-rp-body').innerHTML = bodyHTML;
+    Horizon.initIcons(document.getElementById('rel-rp-body'));
+    panel.classList.add('right-panel--open');
+  }
+
+  function renderOverviewCard(rows) {
+    const rowsHTML = rows.map(r =>
+      '<div class="rp-row"><span class="rp-row__label">' + r.label + '</span>' +
+      '<span class="rp-row__value">' + r.value + '</span></div>'
+    ).join('');
+    return '<div><p class="rp-section-heading">Overview</p>' +
+           '<div class="rp-card">' + rowsHTML + '</div></div>';
+  }
+
+  function renderNoteSection(heading, body) {
+    return '<div><p class="rp-section-heading">' + heading + '</p>' +
+           '<div class="rp-card"><p class="rp-note">' + body + '</p></div></div>';
+  }
+
+  function renderActionButton(label) {
+    return '<button type="button" class="rp-action">' + label + '</button>';
+  }
+
+  function showRelFocalDetail(d) {
+    const sectionsHTML = (d.sections || []).map(s => renderNoteSection(s.heading, s.body)).join('');
+    const html = renderOverviewCard(d.rows) + sectionsHTML;
+    openRelPanel('Focal application', d.name, html);
+  }
+
+  function showRelNodeDetail(d, zone) {
+    const zoneLabel = zone === 'upstream' ? 'Upstream · Business capability'
+      : zone === 'downstream' ? 'Downstream · ' + d.type
+      : 'Integration · ' + d.type;
+    const sectionsHTML = (d.sections || []).map(s => renderNoteSection(s.heading, s.body)).join('');
+    const actionHTML = d.action ? renderActionButton(d.action) : '';
+    const html = renderOverviewCard(d.rows) + sectionsHTML + actionHTML;
+    openRelPanel(zoneLabel, d.name, html);
+  }
+
+  function closeRelDetail() {
+    const panel = document.getElementById('rel-right-panel');
+    panel.classList.remove('right-panel--open');
+    document.querySelectorAll('.rel-node').forEach(n => n.classList.remove('is-selected'));
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    renderRelDiagram();
+    let relResizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(relResizeTimer);
+      relResizeTimer = setTimeout(renderRelDiagram, 150);
+    });
+
+    const closeBtn = document.getElementById('rel-rp-close-btn');
+    if (closeBtn) closeBtn.addEventListener('click', closeRelDetail);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeRelDetail();
+    });
+  });
+</script>
+
+<!-- ── Right panel overlay for app relationship diagram ─────── -->
+<div class="right-panel" id="rel-right-panel">
+  <div class="right-panel__inner">
+    <div class="right-panel__header">
+      <div class="right-panel__title-stack">
+        <span class="right-panel__type-label" id="rel-rp-type-label">Detail</span>
+        <span class="right-panel__name" id="rel-rp-name">—</span>
+      </div>
+      <div class="right-panel__actions">
+        <button class="right-panel__btn" title="Open full page">
+          <span data-icon="arrow-up-right"></span>
+        </button>
+        <button class="right-panel__btn" title="Pin">
+          <span data-icon="thumbtack"></span>
+        </button>
+        <button class="right-panel__btn" id="rel-rp-close-btn" title="Close">
+          <span data-icon="close"></span>
+        </button>
+      </div>
+    </div>
+    <div class="right-panel__body" id="rel-rp-body"></div>
+  </div>
+</div>
+
+</body>
+</html>

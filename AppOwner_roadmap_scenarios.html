@@ -1,0 +1,3209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AppOwner — Plan roadmap with AI</title>
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/dataviz.css">
+  <link rel="stylesheet" href="assets/css/convo-pane.css">
+  <script src="assets/js/icons.js"></script>
+  <script src="assets/js/sidenav.js"></script>
+  <script src="assets/js/sidenav-appowner.js"></script>
+  <script src="data/applications.js"></script>
+  <script src="assets/js/interactions.js" defer></script>
+  <style>
+
+    /* ============================================================
+       Canvas
+    ============================================================ */
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #cde5ef;
+    }
+
+    .app {
+      display: flex;
+      align-items: stretch;
+      width: 100vw;
+      height: 100vh;
+      min-width: 1280px;
+      min-height: 720px;
+      background: #cde5ef;
+    }
+
+    /* ============================================================
+       Side Navigation
+    ============================================================ */
+    .sidenav {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background-color: var(--bg-primary, white);
+      border-right: 1px solid var(--color-neutral-300, #e3e2df);
+      width: 288px;
+      transition: width var(--transition-fast);
+      overflow: hidden;
+    }
+
+    .sidenav--collapsed { width: 52px; }
+
+    .sidenav__top {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+    .sidenav__top::-webkit-scrollbar { display: none; }
+
+    .sidenav__header {
+      display: flex;
+      align-items: center;
+      width: 52px;
+      height: 52px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .sidenav__menu-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-lg, 8px);
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      flex-shrink: 0;
+      margin: 6px;
+      transition: background-color var(--transition-fast);
+    }
+    .sidenav__menu-btn:hover { background-color: var(--bg-secondary); }
+    .sidenav__menu-btn [data-icon] { width: 20px; height: 20px; }
+
+    .sidenav__logo {
+      position: absolute;
+      left: 52px;
+      display: flex;
+      align-items: center;
+      height: 52px;
+      padding: 8px 6px;
+      white-space: nowrap;
+      opacity: 1;
+      transition: opacity var(--transition-fast);
+    }
+    .sidenav--collapsed .sidenav__logo { opacity: 0; pointer-events: none; }
+
+    .sidenav__logo-text {
+      font-family: var(--font-sans);
+      font-size: 15px;
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .sidenav__nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px 6px;
+    }
+
+    .sidenav__item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 40px;
+      border-radius: var(--radius-lg, 8px);
+      padding: 0 10px;
+      cursor: pointer;
+      transition: background-color var(--transition-fast);
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm, 14px);
+      color: var(--text-primary);
+      text-decoration: none;
+      white-space: nowrap;
+      width: 100%;
+      border: none;
+      background: transparent;
+      text-align: left;
+    }
+    .sidenav__item:hover:not(.sidenav__item--active) { background-color: var(--color-neutral-200, #edece9); }
+    .sidenav__item--active { background-color: var(--color-neutral-400, #c2c1be); border-radius: 9999px; }
+    .sidenav__item [data-icon] { width: 20px; height: 20px; flex-shrink: 0; }
+
+    .sidenav__item__label {
+      flex: 1;
+      opacity: 1;
+      transition: opacity var(--transition-fast);
+    }
+    .sidenav--collapsed .sidenav__item__label { opacity: 0; width: 0; overflow: hidden; }
+
+    .sidenav__divider {
+      height: 1px;
+      background-color: var(--border-subtle, #e3e2df);
+      margin: 0 6px;
+    }
+
+    .sidenav__group { display: flex; flex-direction: column; }
+    .sidenav__group-chevron {
+      width: 16px; height: 16px; flex-shrink: 0;
+      margin-left: auto;
+      opacity: 0.5;
+    }
+    .sidenav--collapsed .sidenav__group-chevron { display: none; }
+    .sidenav--collapsed .sidenav__subnav { display: none !important; }
+
+    .sidenav__subnav {
+      list-style: none;
+      margin: 0 0 0 26px;
+      padding: 2px 0 2px 20px;
+      border-left: 1px solid var(--border-subtle, #e3e2df);
+      flex-direction: column;
+      gap: 2px;
+    }
+    .sidenav__subnav:not([hidden]) {
+      display: flex;
+    }
+    .sidenav__subnav-item {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm, 14px);
+      color: var(--text-primary);
+      text-decoration: none;
+      display: block;
+      padding: 6px 8px;
+      border-radius: var(--radius-md, 6px);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color var(--transition-fast);
+    }
+    .sidenav__subnav-item:hover {
+      background-color: var(--color-neutral-200, #edece9);
+    }
+    .sidenav__subnav-item.is-active {
+      background-color: var(--color-neutral-200, #edece9);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    .sidenav__bottom {
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidenav__profile {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 56px;
+      padding: 6px 8px;
+    }
+
+    .sidenav__avatar {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+    }
+
+    .sidenav__avatar-img {
+      width: 32px;
+      height: 32px;
+      border-radius: 9999px;
+      background-color: var(--color-neutral-800, #343331);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: var(--font-weight-semibold);
+      color: white;
+    }
+
+    .sidenav__avatar-status {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 8px;
+      height: 8px;
+      border-radius: 9999px;
+      background-color: #52cb3d;
+      border: 1.5px solid white;
+    }
+
+    .sidenav__profile-name {
+      flex: 1;
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm, 14px);
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      opacity: 1;
+      transition: opacity var(--transition-fast);
+    }
+    .sidenav--collapsed .sidenav__profile-name { opacity: 0; width: 0; overflow: hidden; }
+
+    .sidenav__profile-more {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-md, 6px);
+      border: none;
+      background: transparent;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background-color var(--transition-fast), opacity var(--transition-fast);
+    }
+    .sidenav__profile-more:hover { background-color: var(--bg-secondary); }
+    .sidenav--collapsed .sidenav__profile-more { opacity: 0; }
+    .sidenav__profile-more [data-icon] { width: 14px; height: 14px; }
+
+    .sidenav--dark {
+      background-color: transparent;
+      border-right-color: transparent;
+    }
+    .sidenav--dark .sidenav__item--active {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+    .sidenav--dark .sidenav__item { color: var(--text-primary); }
+    .sidenav--dark .sidenav__item--active { color: var(--text-primary); }
+    .sidenav--dark .sidenav__item:hover:not(.sidenav__item--active) {
+      background-color: rgba(0, 0, 0, 0.06);
+    }
+
+    .app__sidebar {
+      flex-shrink: 0;
+    }
+
+    /* ============================================================
+       Main panel
+    ============================================================ */
+    .app__panel {
+      flex: 1;
+      min-width: 0;
+      margin: 16px 16px 16px 0;
+      height: calc(100vh - 32px);
+      border-radius: 24px;
+      border: 2px solid rgba(255,255,255,0.85);
+      background: white;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ============================================================
+       Page header — breadcrumb, title, tabs
+    ============================================================ */
+    .page-header {
+      display: flex;
+      flex-direction: column;
+      padding: 16px 24px 0;
+      flex-shrink: 0;
+    }
+
+    .page-header__crumb {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .page-header__crumb [data-icon] { width: 14px; height: 14px; }
+
+    .page-header__title-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-bottom: var(--space-4);
+    }
+    .page-header__title {
+      font-family: var(--font-sans);
+      font-size: 22px;
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+      margin: 0;
+    }
+    .page-header__count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 36px;
+      height: 22px;
+      padding: 0 8px;
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-secondary);
+      background: var(--color-neutral-200);
+      border-radius: var(--radius-full);
+    }
+
+    /* Tabs row */
+    .page-tabs {
+      display: flex;
+      gap: var(--space-6);
+    }
+    .page-tab {
+      position: relative;
+      padding: 8px 0;
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--text-tertiary);
+      cursor: pointer;
+      background: none;
+      border: none;
+      transition: color var(--transition-fast);
+    }
+    .page-tab:hover { color: var(--text-primary); }
+    .page-tab.is-active { color: #2e8540; font-weight: var(--font-weight-semibold); }
+    .page-tab.is-active::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; bottom: -1px;
+      height: 2px;
+      background: #2e8540;
+    }
+
+    /* ============================================================
+       Toolbar
+    ============================================================ */
+    .ar-toolbar {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      margin-top: 8px;
+      padding: 10px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--surface-primary);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    .ar-toolbar__group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+    }
+    .ar-toolbar__group[hidden] { display: none; }
+    .ar-toolbar__label { color: var(--text-tertiary); font-size: 13px; }
+
+    .ar-toolbar__divider {
+      width: 1px;
+      height: 20px;
+      background: var(--color-neutral-300);
+      flex-shrink: 0;
+    }
+    .ar-toolbar__divider[hidden] { display: none; }
+
+    /* Chart-type pill group — pills sit flush as a 2-up segmented control */
+    #ar-chart-type-toggle { display: inline-flex; gap: 8px; }
+    #ar-chart-type-toggle .pill { font-size: 13px; padding: 0 16px; }
+    #ar-chart-type-toggle .pill:not(.pill--selected) { border-color: var(--color-neutral-400); }
+
+    /* xs-size override for .dropdown — toolbar variant */
+    .dropdown--xs .dropdown__trigger {
+      height: 28px;
+      padding: 2px 14px;
+      font-size: 13px;
+      gap: 12px;
+    }
+    .dropdown--xs .dropdown__trigger [data-icon] { width: 10px; height: 10px; }
+    .dropdown--xs .dropdown__trigger [data-icon] svg { width: 100%; height: 100%; }
+    .dropdown--xs .dropdown__panel { min-width: 180px; }
+
+    .ar-toolbar__spacer { flex: 1; }
+
+    .ar-toolbar__share {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+      color: var(--text-primary);
+      background: var(--surface-primary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-field);
+      cursor: pointer;
+      transition: background var(--transition-fast);
+    }
+    .ar-toolbar__share:hover { background: var(--color-ghost-hover); }
+    .ar-toolbar__share [data-icon] { width: 14px; height: 14px; }
+
+    .ar-toolbar__menu-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: transparent;
+      color: var(--text-tertiary);
+      cursor: pointer;
+    }
+    .ar-toolbar__menu-btn:hover { background: var(--color-ghost-hover); color: var(--text-primary); }
+    .ar-toolbar__menu-btn [data-icon] { width: 16px; height: 16px; }
+
+    /* ============================================================
+       Views — container
+    ============================================================ */
+    .ar-body {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      background: #F3F9FB;
+      position: relative;
+    }
+
+    .ar-view[hidden] { display: none; }
+
+    /* Personalization right-panel content (right-panel styles live in assets/css/components.css) */
+    #ar-personalization-panel .right-panel__body {
+      gap: var(--space-5);
+      background: #F6F6F6;
+    }
+    .personalization__section {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    .personalization__label {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+    }
+
+    /* ============================================================
+       Lifecycle colour aliases (reuse existing tokens only)
+    ============================================================ */
+    :root {
+      --ar-invest:   var(--color-success);
+      --ar-sustain:  var(--color-info);
+      --ar-migrate:  var(--dv-orange-5);
+      --ar-retire:   var(--color-error);
+
+      --ar-invest-soft:  color-mix(in srgb, var(--color-success) 22%, white);
+      --ar-sustain-soft: color-mix(in srgb, var(--color-info) 22%, white);
+      --ar-migrate-soft: color-mix(in srgb, var(--dv-orange-5) 30%, white);
+      --ar-retire-soft:  color-mix(in srgb, var(--color-error) 24%, white);
+
+      /* Mid-strength fills for gantt bars — toned down from the saturated brand tokens while leaving white icons readable */
+      --ar-invest-mid:  color-mix(in srgb, var(--color-success) 65%, white);
+      --ar-sustain-mid: color-mix(in srgb, var(--color-info) 65%, white);
+      --ar-migrate-mid: color-mix(in srgb, var(--dv-orange-5) 65%, white);
+      --ar-retire-mid:  color-mix(in srgb, var(--color-error) 65%, white);
+    }
+
+    /* ============================================================
+       Gantt view — ported from components/roadmap.html
+    ============================================================ */
+    :root {
+      --ar-name-w: 220px;
+      --ar-disp-w: 160px;
+    }
+
+    .ar-gantt {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header row (Name | Disposition | quarters+months) */
+    .ar-gantt__header {
+      display: flex;
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      background: var(--surface-primary);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .ar-gantt__col {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+      background: var(--surface-primary);
+      padding: 0 var(--space-3);
+      border-right: 1px solid var(--border-subtle);
+    }
+    .ar-gantt__col--name { width: var(--ar-name-w); min-width: var(--ar-name-w); }
+    .ar-gantt__col--disp { width: var(--ar-disp-w); min-width: var(--ar-disp-w); }
+
+    .ar-gantt__header .ar-gantt__col { height: 66px; }
+
+    .ar-gantt__timeline-head {
+      flex: 1;
+      min-width: 780px;
+      display: flex;
+      flex-direction: column;
+    }
+    .ar-gantt__quarters {
+      display: flex;
+      height: 34px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-secondary);
+    }
+    .ar-gantt__quarter {
+      display: flex;
+      align-items: center;
+      padding: 0 var(--space-3);
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-secondary);
+      border-right: 1px solid var(--border-subtle);
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .ar-gantt__quarter:last-child { border-right: none; }
+
+    .ar-gantt__months {
+      display: flex;
+      height: 32px;
+    }
+    .ar-gantt__month {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: var(--font-weight-normal);
+      color: var(--text-tertiary);
+      border-right: 1px solid var(--border-subtle);
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .ar-gantt__month:last-child { border-right: none; }
+
+    /* Body rows */
+    .ar-gantt__body {
+      position: relative;
+    }
+
+    .ar-gantt__row {
+      display: flex;
+      min-height: 50px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .ar-gantt__row:last-child { border-bottom: none; }
+    .ar-gantt__row:hover .ar-gantt__col { background: var(--bg-secondary); }
+
+    .ar-gantt__row .ar-gantt__col {
+      height: 50px;
+      font-weight: var(--font-weight-normal);
+    }
+
+    .ar-gantt__name-cell {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      min-width: 0;
+    }
+    .ar-gantt__row-handle {
+      color: var(--text-tertiary);
+      opacity: 0;
+      cursor: grab;
+      transition: opacity var(--transition-fast);
+    }
+    .ar-gantt__row:hover .ar-gantt__row-handle { opacity: 1; }
+    .ar-gantt__row-handle [data-icon] { width: 14px; height: 14px; }
+
+    .ar-gantt__chevron {
+      width: 14px; height: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-tertiary);
+    }
+    .ar-gantt__chevron[aria-hidden="true"] { visibility: hidden; }
+    .ar-gantt__chevron [data-icon] { width: 12px; height: 12px; }
+
+    .ar-gantt__app-icon {
+      width: 16px; height: 16px;
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+    }
+    .ar-gantt__app-icon [data-icon] { width: 16px; height: 16px; }
+
+    .ar-gantt__name-link {
+      flex: 1;
+      min-width: 0;
+      color: var(--color-link);
+      text-decoration: none;
+      font-size: var(--font-size-sm);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ar-gantt__name-link:hover { text-decoration: underline; }
+
+    .ar-gantt__disp {
+      font-size: var(--font-size-sm);
+      color: var(--text-primary);
+    }
+
+    .ar-gantt__timeline {
+      flex: 1;
+      min-width: 780px;
+      position: relative;
+    }
+
+    /* Grid lines */
+    .ar-gantt__grid {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      pointer-events: none;
+    }
+    .ar-gantt__gcol {
+      flex: 1;
+      border-right: 1px solid var(--border-subtle);
+    }
+    .ar-gantt__gcol:last-child { border-right: none; }
+    .ar-gantt__gcol.is-q-start { border-left: 1px solid var(--border-default); }
+
+    /* Segment bar */
+    .ar-gantt__seg {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 24px;
+      display: flex;
+      align-items: center;
+      padding: 0 6px;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: var(--font-weight-semibold);
+      white-space: nowrap;
+      overflow: hidden;
+      z-index: 1;
+      transition: filter var(--transition-fast);
+      border: 1px solid transparent;
+    }
+    .ar-gantt__seg:hover { filter: brightness(0.95); }
+
+    .ar-gantt__seg--invest  { background: var(--ar-invest-mid);  color: #ffffff; }
+    .ar-gantt__seg--sustain { background: var(--ar-sustain-mid); color: #ffffff; }
+    .ar-gantt__seg--migrate { background: var(--ar-migrate-mid); color: #ffffff; }
+    .ar-gantt__seg--retire  { background: var(--ar-retire-mid);  color: #ffffff; }
+
+    /* Segments that start the bar get a rounded left, ones that end get a rounded right */
+    .ar-gantt__seg.is-first { border-top-left-radius: 13px; border-bottom-left-radius: 13px; }
+    .ar-gantt__seg.is-last  { border-top-right-radius: 13px; border-bottom-right-radius: 13px; }
+
+    .ar-gantt__seg [data-icon] {
+      width: 11px; height: 11px;
+    }
+
+    /* Today marker (matches gantt.html today color + ball) */
+    .ar-gantt__today {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--color-info);
+      pointer-events: none;
+      z-index: 5;
+    }
+    .ar-gantt__today::before {
+      content: '';
+      position: absolute;
+      top: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 10px;
+      height: 10px;
+      background: var(--color-info);
+      border-radius: 50%;
+    }
+
+    /* Gantt view frame — card container + header row (mirrors gantt.html .gt-board / .gt-header) */
+    .ar-gantt-page {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      padding: var(--space-5);
+    }
+
+    .ar-gantt-board {
+      background: var(--surface-primary);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    /* Inline top-right legend (chip row) */
+    .ar-gantt__legend {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      color: var(--text-secondary);
+    }
+    .ar-gantt__legend-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ar-gantt__legend-pip {
+      width: 16px; height: 8px;
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+    }
+    .ar-gantt__legend-pip--invest  { background: var(--ar-invest-mid);  }
+    .ar-gantt__legend-pip--sustain { background: var(--ar-sustain-mid); }
+    .ar-gantt__legend-pip--migrate { background: var(--ar-migrate-mid); }
+    .ar-gantt__legend-pip--retire  { background: var(--ar-retire-mid);  }
+
+    /* ============================================================
+       Matrix view — ported from components/kanban.html
+    ============================================================ */
+    .ar-matrix {
+      padding: var(--space-5) var(--space-5) var(--space-8);
+      --ar-rowlabel-w: 200px;
+      --ar-gap: var(--space-2);
+    }
+
+    .ar-matrix__legend {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: var(--space-4);
+      margin-bottom: var(--space-3);
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      color: var(--text-secondary);
+    }
+    .ar-matrix__legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ar-matrix__legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+    .ar-matrix__legend-dot--invest  { background: var(--ar-invest);  }
+    .ar-matrix__legend-dot--sustain { background: var(--ar-sustain); }
+    .ar-matrix__legend-dot--migrate { background: var(--ar-migrate); }
+    .ar-matrix__legend-dot--retire  { background: var(--ar-retire);  }
+
+    .ar-matrix__title {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+      margin-bottom: var(--space-3);
+    }
+
+    /* Grid — first col is row-label (horizontal-lane), then N lane cols */
+    .ar-matrix__grid {
+      display: flex;
+      flex-direction: column;
+      gap: var(--ar-gap);
+    }
+
+    .ar-matrix__row {
+      display: grid;
+      grid-template-columns: var(--ar-rowlabel-w) 1fr;
+      gap: var(--ar-gap);
+      align-items: stretch;
+    }
+
+    .ar-matrix__rowlabel {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--text-primary);
+      padding: var(--space-4) var(--space-3) var(--space-3) var(--space-4);
+      background: #BDDEE7;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .ar-matrix__rowlabel [data-icon] {
+      width: 12px; height: 12px;
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+    }
+    .ar-matrix__rowlabel-text {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ar-matrix__rowlabel-count {
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-normal);
+      color: var(--text-tertiary);
+    }
+
+    .ar-matrix__cells {
+      display: grid;
+      grid-template-columns: repeat(var(--ar-cols), minmax(0, 1fr));
+      gap: var(--ar-gap);
+    }
+
+    .ar-matrix__col {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 6px;
+      background: transparent;
+      border-radius: var(--radius-md);
+      min-height: 68px;
+    }
+    .ar-matrix__col.is-empty {
+      background: transparent;
+      border: 1px dashed var(--border-subtle);
+    }
+
+    /* Column header — rendered once at the top of the grid */
+    .ar-matrix__colheader-row {
+      display: grid;
+      grid-template-columns: var(--ar-rowlabel-w) 1fr;
+      gap: var(--ar-gap);
+      margin-bottom: var(--space-2);
+      position: sticky;
+      top: 0;
+      background: transparent;
+      z-index: 2;
+      padding-bottom: 4px;
+    }
+    .ar-matrix__colheader-labels {
+      display: grid;
+      grid-template-columns: repeat(var(--ar-cols), minmax(0, 1fr));
+      gap: var(--ar-gap);
+    }
+    .ar-matrix__colheader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 12px;
+      min-height: 64px;
+      box-sizing: border-box;
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+      background: #BDDEE7;
+      border: none;
+      border-radius: var(--radius-md);
+    }
+    .ar-matrix__corner {
+      padding: 10px 12px;
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-tertiary);
+      background: transparent;
+      line-height: 1.4;
+    }
+
+    /* Card (reuses kanban's .kb-card pattern) */
+    .ar-card {
+      position: relative;
+      background: var(--surface-primary);
+      border: 1px solid var(--border-subtle);
+      border-left: 3px solid var(--ar-card-accent, var(--border-default));
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow var(--transition-fast), transform var(--transition-fast), background var(--transition-fast);
+      cursor: pointer;
+    }
+    .ar-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+      background: var(--ar-card-soft, var(--surface-primary));
+    }
+
+    .ar-card--invest  { --ar-card-accent: var(--ar-invest);  --ar-card-soft: var(--ar-invest-soft);  }
+    .ar-card--sustain { --ar-card-accent: var(--ar-sustain); --ar-card-soft: var(--ar-sustain-soft); }
+    .ar-card--migrate { --ar-card-accent: var(--ar-migrate); --ar-card-soft: var(--ar-migrate-soft); }
+    .ar-card--retire  { --ar-card-accent: var(--ar-retire);  --ar-card-soft: var(--ar-retire-soft);  }
+
+    /* Reserves the same vertical slot in every FY column so a card stays on
+       a fixed horizontal line across columns where the app appears. */
+    .ar-card--placeholder {
+      visibility: hidden;
+      pointer-events: none;
+      box-shadow: none;
+    }
+
+    /* Cohort highlight: when one card is hovered, every other card for the
+       same app (across FY columns) gets the same lift + tint. */
+    .ar-card.is-cohort-hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+      background: var(--ar-card-soft, var(--surface-primary));
+    }
+
+    .ar-card__name {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--text-primary);
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ar-card__meta {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--space-2);
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      color: var(--text-tertiary);
+    }
+    .ar-card__meta + .ar-card__meta { margin-top: 4px; }
+    .ar-card__meta-k { color: var(--text-tertiary); }
+    .ar-card__meta-v { color: var(--text-primary); margin-left: 4px; font-weight: var(--font-weight-medium); }
+
+    .ar-matrix__empty {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      color: var(--text-disabled);
+      text-align: center;
+      align-self: center;
+      margin: auto;
+    }
+
+    /* Conversation input — textarea auto-grow */
+    textarea.convo-input-card__placeholder {
+      resize: none;
+      line-height: 1.4;
+      max-height: 160px;
+      overflow-y: auto;
+      padding: 4px 0;
+    }
+    .convo-input-card.convo-input-card--expanded {
+      align-items: flex-end;
+      border-radius: 20px;
+    }
+
+    /* Chat thread inside the convo-pane */
+    .convo-messages {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      margin-top: var(--space-4);
+    }
+    .convo-messages .bubble { max-width: 100%; }
+
+    /* ============================================================
+       Full-page chat (after send)
+    ============================================================ */
+    .rm-chat {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      min-height: 0;
+      position: relative;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 80%, rgba(180,230,175,0.48) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 80% 20%, rgba(180,230,175,0.38) 0%, transparent 50%),
+        radial-gradient(ellipse 90% 70% at 50% 40%, rgba(170,220,255,0.55) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 70% 60%, rgba(210,200,242,0.28) 0%, transparent 50%),
+        linear-gradient(160deg, #e4f2ff 0%, #ddf0f5 30%, #e4f5e8 60%, #e0ecfa 100%);
+    }
+    .rm-chat--visible { display: flex; }
+
+    .rm-chat__scroll {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: var(--space-8) var(--space-6) 140px;
+    }
+    .rm-chat__inner {
+      width: 100%;
+      max-width: 780px;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+    }
+
+    .rm-chat__sparkle {
+      width: 32px;
+      height: 32px;
+      color: #2D637D;
+      align-self: flex-start;
+    }
+    .rm-chat__sparkle [data-icon] { width: 32px; height: 32px; }
+    .rm-chat__sparkle [data-icon] svg { width: 100%; height: 100%; }
+
+    .rm-chat__title {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-3xl, 28px);
+      font-weight: var(--font-weight-bold);
+      color: var(--text-primary);
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+    .rm-chat__subtitle {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: var(--line-height-relaxed);
+      margin: 0;
+    }
+
+    .rm-chat__messages {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      width: 100%;
+      margin-top: var(--space-4);
+    }
+    .rm-chat__messages .bubble--ai { max-width: 100%; width: 100%; }
+
+    .rm-chat__sticky-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: var(--space-4) var(--space-6) var(--space-5);
+      background: linear-gradient(to top, rgba(228,242,255,0.95) 40%, rgba(228,242,255,0));
+      backdrop-filter: blur(4px);
+      display: flex;
+      justify-content: center;
+    }
+    .rm-chat__sticky-bar .convo-input-card {
+      max-width: 780px;
+      width: 100%;
+    }
+
+    /* Attachment chip inside a bubble — compact light card (mirrors arb-chat-card__thumbnail--sm) */
+    .bubble__attachment {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-3);
+      width: 260px;
+      max-width: 100%;
+      padding: var(--space-2) var(--space-3);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-sizing: border-box;
+    }
+    .bubble--ai .bubble__attachment { background: var(--bg-secondary); }
+    .bubble__attachment-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-primary);
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+    .bubble__attachment-icon [data-icon] { width: 18px; height: 18px; }
+    .bubble__attachment-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      min-width: 0;
+    }
+    .bubble__attachment-name {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-normal);
+      color: var(--text-primary);
+    }
+    .bubble__attachment-type {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    /* ============================================================
+       AI Loader (copied from AppOwner_landing.html)
+    ============================================================ */
+    .ai-loader { position: relative; width: 80px; height: 80px; }
+    .ai-loader__ring { position: absolute; inset: 0; animation: ai-ring-spin 2s linear infinite; }
+    .ai-loader__ring svg { width: 100%; height: 100%; display: block; }
+    .ai-loader__center { position: absolute; inset: 12px; background: transparent; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .ai-loader__sparkles { position: relative; width: 34px; height: 34px; }
+    .ai-loader__sparkle { position: absolute; display: block; }
+    .ai-loader__sparkle svg { width: 100%; height: 100%; display: block; }
+    .ai-loader__sparkle--main { width: 30px; height: 30px; bottom: -2px; left: 50%; transform: translateX(-50%); color: #312e81; animation: sparkle-breathe 2s ease-in-out infinite; --tx: -50%; }
+    .ai-loader__sparkle--tl { width: 11px; height: 11px; top: 1px; left: -1px; color: #3730a3; animation: sparkle-breathe 2s ease-in-out infinite 0.4s; }
+    .ai-loader__sparkle--tr { width: 14px; height: 14px; top: -2px; right: -1px; color: #3730a3; animation: sparkle-breathe 2s ease-in-out infinite 0.8s; }
+    @keyframes ai-ring-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes sparkle-breathe { 0%, 100% { opacity: 0.55; transform: translateX(var(--tx, 0)) scale(0.88); } 50% { opacity: 1; transform: translateX(var(--tx, 0)) scale(1.05); } }
+
+    /* ============================================================
+       Scenarios comparison view — overlays the panel, slides in from right
+    ============================================================ */
+    .rm-scenarios-pane {
+      position: absolute;
+      inset: 0;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 600ms cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 5;
+    }
+    .rm-scenarios-pane--open { transform: translateX(0); }
+
+    .rm-scenarios-pane__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 14px 14px 20px;
+      flex-shrink: 0;
+      gap: 12px;
+    }
+    .rm-scenarios-pane__title {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-base, 14px);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+      margin: 0;
+    }
+    .rm-scenarios-pane__actions {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-shrink: 0;
+    }
+    .rm-scenarios-pane__btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border: none;
+      border-radius: 9999px;
+      background: transparent;
+      color: var(--text-tertiary);
+      cursor: pointer;
+    }
+    .rm-scenarios-pane__btn:hover { background-color: var(--bg-secondary); color: var(--text-primary); }
+    .rm-scenarios-pane__btn [data-icon] { width: 15px; height: 15px; }
+    .rm-scenarios-pane__body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .rm-scenarios__loading {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-4);
+    }
+    .rm-scenarios__loading-text {
+      font-family: var(--font-sans);
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+
+    .rm-scenarios {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      padding: 0 37px;
+    }
+    .rm-scenarios[hidden],
+    .rm-scenarios__why[hidden] { display: none; }
+
+    .rm-scenario-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 36px 16px 16px;
+      min-width: 0;
+      background: var(--bg-primary, white);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+    }
+    .rm-scenario-card--recommended {
+      border: 2px solid var(--color-primary);
+    }
+    .rm-scenario-card__rec {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 12px;
+      background: #e0eaee;
+      color: var(--color-primary);
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: var(--font-weight-bold);
+      letter-spacing: 0.08em;
+      border-radius: 9999px;
+    }
+
+    .rm-scenario-card__label {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: var(--font-weight-bold);
+      color: var(--text-tertiary);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .rm-scenario-card__head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .rm-scenario-card__title {
+      font-family: var(--font-sans);
+      font-size: 16px;
+      font-weight: var(--font-weight-bold);
+      color: var(--text-primary);
+      margin: 0;
+      line-height: 1.25;
+    }
+    .rm-scenario-card__pill {
+      flex-shrink: 0;
+      padding: 4px 10px;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: var(--font-weight-semibold);
+      border-radius: 9999px;
+      white-space: nowrap;
+    }
+    .rm-scenario-card__pill--balanced   { background: #d4eddc; color: #1f7a3e; }
+    .rm-scenario-card__pill--aggressive { background: #f7e3c2; color: #8d5a08; }
+    .rm-scenario-card__pill--diplomatic { background: #d6e4fb; color: #2a6edc; }
+
+    .rm-scenario-card__desc {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .rm-scenario-card__metric {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 4px 0;
+    }
+    .rm-scenario-card__metric-label {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: var(--font-weight-bold);
+      color: var(--text-tertiary);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .rm-scenario-card__transition {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 10px;
+      font-family: var(--font-sans);
+      line-height: 1;
+    }
+    .rm-scenario-card__from {
+      font-size: 18px;
+      font-weight: var(--font-weight-normal);
+      color: var(--text-tertiary);
+    }
+    .rm-scenario-card__arrow {
+      font-size: 18px;
+      color: var(--text-tertiary);
+      transform: translateY(-1px);
+    }
+    .rm-scenario-card__to {
+      font-size: 26px;
+      font-weight: var(--font-weight-bold);
+    }
+    .rm-scenario-card__to--green  { color: #2a8a52; }
+    .rm-scenario-card__to--orange { color: #b06a1a; }
+    .rm-scenario-card__to--blue   { color: #2a6edc; }
+
+    .rm-scenario-card__divider {
+      height: 1px;
+      background: var(--border-subtle);
+    }
+
+    .rm-scenario-card__kpis {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .rm-scenario-card__kpi {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-sans);
+      font-size: 13px;
+    }
+    .rm-scenario-card__kpi-label { color: var(--text-secondary); }
+    .rm-scenario-card__kpi-value { color: var(--text-primary); font-weight: var(--font-weight-semibold); }
+    .rm-scenario-card__kpi-value--green  { color: #1f7a3e; }
+    .rm-scenario-card__kpi-value--orange { color: #b06a1a; }
+    .rm-scenario-card__kpi-value--red    { color: #c4322f; }
+
+    .rm-scenario-card__tradeoff {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .rm-scenario-card__tradeoff-label {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: var(--font-weight-bold);
+      color: var(--text-tertiary);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .rm-scenario-card__tradeoff-text {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .rm-scenario-card__view {
+      margin-top: auto;
+      align-self: center;
+    }
+
+    .rm-scenarios__why {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px 20px;
+      background: #e0eaee;
+      border-radius: 12px;
+      margin: -12px 37px 12px;
+    }
+    .rm-scenarios__why-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      border-radius: 9999px;
+      background: var(--color-primary);
+      color: var(--color-primary-content);
+    }
+    .rm-scenarios__why-icon [data-icon] { width: 14px; height: 14px; }
+    .rm-scenarios__why-body {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .rm-scenarios__why-title {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-primary);
+    }
+    .rm-scenarios__why-text {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--text-primary);
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    /* ---- Scenario A details view ---- */
+    .rm-scenarios__details[hidden] { display: none; }
+    .rm-scenarios__details {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      padding: 0 37px 24px;
+    }
+    .rm-scenarios__back {
+      align-self: flex-start;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      margin-top: -8px;
+      margin-left: -10px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-primary);
+    }
+    .rm-scenarios__back:hover { background: var(--bg-secondary); }
+    .rm-scenarios__back [data-icon] { width: 14px; height: 14px; }
+
+    .rm-scenarios__details-head {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .rm-scenarios__details-label {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: var(--font-weight-bold);
+      color: var(--color-primary);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .rm-scenarios__details-title {
+      font-family: var(--font-sans);
+      font-size: 20px;
+      font-weight: var(--font-weight-bold);
+      color: var(--text-primary);
+      margin: 0;
+    }
+    .rm-scenarios__details-sub {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .rm-detail {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .rm-detail__title {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: var(--font-weight-bold);
+      color: var(--text-primary);
+      margin: 0;
+    }
+
+    /* Timeline */
+    .rm-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 16px;
+      background: var(--bg-primary, white);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+    }
+    .rm-timeline__axis {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-tertiary);
+      letter-spacing: 0.05em;
+    }
+    .rm-timeline__track {
+      position: relative;
+      height: 36px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .rm-timeline__phase {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: var(--font-weight-semibold);
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .rm-timeline__phase--invest  { background: var(--ar-invest-mid); }
+    .rm-timeline__phase--migrate { background: var(--ar-migrate-mid); }
+    .rm-timeline__phase--sustain { background: var(--ar-sustain-mid); }
+    .rm-timeline__phase--retire  { background: var(--ar-retire-mid); }
+
+    /* Sequencing list */
+    .rm-seq {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-primary, white);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .rm-seq__item {
+      display: grid;
+      grid-template-columns: 24px 1fr auto auto;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+    }
+    .rm-seq__item + .rm-seq__item {
+      border-top: 1px solid var(--border-subtle);
+    }
+    .rm-seq__step {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 9999px;
+      background: var(--bg-secondary);
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: var(--font-weight-bold);
+      color: var(--text-secondary);
+    }
+    .rm-seq__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .rm-seq__name {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+    }
+    .rm-seq__meta {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    .rm-seq__date {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-secondary);
+    }
+    .rm-disp {
+      padding: 3px 9px;
+      border-radius: 9999px;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: var(--font-weight-semibold);
+      color: #ffffff;
+      white-space: nowrap;
+    }
+    .rm-disp--invest  { background: var(--ar-invest-mid); }
+    .rm-disp--sustain { background: var(--ar-sustain-mid); }
+    .rm-disp--migrate { background: var(--ar-migrate-mid); }
+    .rm-disp--retire  { background: var(--ar-retire-mid); }
+
+    /* Dependencies */
+    .rm-deps {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-primary, white);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .rm-deps__item {
+      display: grid;
+      grid-template-columns: auto auto auto 1fr;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+    }
+    .rm-deps__item + .rm-deps__item {
+      border-top: 1px solid var(--border-subtle);
+    }
+    .rm-deps__from,
+    .rm-deps__to {
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+    }
+    .rm-deps__arrow [data-icon],
+    .rm-deps__arrow {
+      width: 14px;
+      height: 14px;
+      color: var(--text-tertiary);
+    }
+    .rm-deps__note {
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    /* Risks */
+    .rm-risks {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-primary, white);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .rm-risks__item {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      align-items: start;
+      gap: 12px;
+      padding: 12px 16px;
+    }
+    .rm-risks__item + .rm-risks__item {
+      border-top: 1px solid var(--border-subtle);
+    }
+    .rm-risks__sev {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 0;
+      border-radius: 9999px;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: var(--font-weight-bold);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .rm-risks__sev--high { background: #fde2e1; color: #c4322f; }
+    .rm-risks__sev--med  { background: #fbeed1; color: #8d5a08; }
+    .rm-risks__sev--low  { background: #d4eddc; color: #1f7a3e; }
+    .rm-risks__body { display: flex; flex-direction: column; gap: 4px; }
+    .rm-risks__title {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-primary);
+    }
+    .rm-risks__mit {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Typing indicator inside an AI bubble */
+    .rm-typing {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 0;
+    }
+    .rm-typing__dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-tertiary);
+      animation: rm-typing-bounce 1.3s ease-in-out infinite;
+    }
+    .rm-typing__dot:nth-child(2) { animation-delay: 0.15s; }
+    .rm-typing__dot:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes rm-typing-bounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30%           { transform: translateY(-4px); opacity: 1; }
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Sidebar -->
+  <div class="app__sidebar">
+    <div data-component="appowner-sidenav"></div>
+  </div>
+
+  <!-- Conversation Side Pane -->
+  <aside class="convo-pane" id="convo-pane" aria-label="Conversation">
+    <div class="convo-pane__inner">
+
+      <div class="convo-pane__titlebar">
+        <span class="convo-pane__titlebar-label">Now Assist</span>
+        <div class="convo-pane__titlebar-actions">
+          <button class="convo-pane__titlebar-btn" id="convo-expand" aria-label="Open full page">
+            <span data-icon="expand"></span>
+          </button>
+          <button class="convo-pane__titlebar-btn" id="convo-close" aria-label="Close">
+            <span data-icon="close"></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="convo-pane__body">
+
+        <!-- Sparkle icon -->
+        <span class="convo-sparkle"><span data-icon="ai-sparkle"></span></span>
+
+        <!-- Greeting -->
+        <p class="convo-msg__greeting">Hi Jenny — let's plan your application roadmap</p>
+        <p class="convo-msg__text">I can help you sequence dispositions, balance <strong>Invest, Sustain, Migrate, and Retire</strong> decisions, and align lifecycle changes with your fiscal periods. What are you trying to achieve?</p>
+
+        <!-- Feedback actions -->
+        <div class="convo-actions">
+          <button class="convo-action-btn" title="Copy"><span data-icon="clipboard"></span></button>
+          <button class="convo-action-btn" title="Helpful"><span data-icon="thumbs-up"></span></button>
+          <button class="convo-action-btn" title="Not helpful"><span data-icon="thumbs-down"></span></button>
+          <button class="convo-action-btn" title="Read aloud"><span data-icon="sound-wave"></span></button>
+          <button class="convo-action-btn" title="Edit"><span data-icon="pencil"></span></button>
+          <button class="convo-action-btn" title="Share"><span data-icon="upload"></span></button>
+          <button class="convo-action-btn" title="Regenerate"><span data-icon="arrow-clockwise"></span></button>
+        </div>
+
+        <!-- Chat thread (turn 1+ bubbles append here) -->
+        <div class="convo-messages" id="convo-messages"></div>
+
+      </div><!-- /convo-pane__body -->
+
+      <div class="convo-pane__footer">
+        <div class="convo-input-card" id="convo-input-card">
+          <button class="convo-input-card__add" aria-label="Attach">
+            <span data-icon="plus"></span>
+          </button>
+          <textarea class="convo-input-card__placeholder" id="convo-input"
+            rows="1" placeholder="Search or ask me anything"></textarea>
+          <button class="convo-input-card__send" aria-label="Send">
+            <span data-icon="arrow-up"></span>
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /convo-pane__inner -->
+  </aside><!-- /convo-pane -->
+
+  <!-- Main panel -->
+  <div class="app__panel">
+
+    <!-- Header + Tabs -->
+    <header class="page-header">
+      <div class="page-header__title-row">
+        <h1 class="page-header__title">Application roadmap</h1>
+        <span class="page-header__count" id="app-count">0</span>
+        <button class="btn btn-sm btn-primary" id="plan-roadmap-ai" style="margin-left:auto;">
+          <span data-icon="ai-sparkle"></span>
+          Plan roadmap with AI
+        </button>
+      </div>
+    </header>
+
+    <!-- Toolbar -->
+    <div class="ar-toolbar">
+      <div class="ar-toolbar__group">
+        <span class="ar-toolbar__label">View</span>
+        <div id="ar-chart-type-toggle" role="tablist">
+          <button class="pill pill--xs pill--selected" role="tab" aria-selected="true" data-value="gantt">Gantt</button>
+          <button class="pill pill--xs" role="tab" aria-selected="false" data-value="matrix">Matrix</button>
+        </div>
+      </div>
+
+      <span class="ar-toolbar__divider"></span>
+
+      <!-- Gantt-only: year range -->
+      <div class="ar-toolbar__group ar-gantt-only">
+        <span class="ar-toolbar__label">Year range</span>
+        <div class="dropdown dropdown--xs" id="ar-year-range">
+          <button class="dropdown__trigger" aria-haspopup="listbox" aria-expanded="false">
+            <span data-dropdown-value>2025-2028</span>
+            <span data-icon="chevron-down"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Matrix-only controls -->
+      <div class="ar-toolbar__group ar-matrix-only" hidden>
+        <span class="ar-toolbar__label">Horizontal lane</span>
+        <div class="dropdown dropdown--xs" id="ar-hlane">
+          <button class="dropdown__trigger" id="ar-hlane-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span data-dropdown-value>Disposition</span>
+            <span data-icon="chevron-down"></span>
+          </button>
+          <div class="dropdown__panel" id="ar-hlane-menu" role="listbox" hidden>
+            <div class="dropdown__item" role="option" data-value="capability">
+              <span class="dropdown__item__label">Business capability</span>
+            </div>
+            <div class="dropdown__item dropdown__item--selected" role="option" data-value="currentDisposition">
+              <span class="dropdown__item__label">Disposition</span>
+              <span data-icon="check" class="dropdown__item__check"></span>
+            </div>
+            <div class="dropdown__item" role="option" data-value="fiscalPeriod">
+              <span class="dropdown__item__label">Fiscal period</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ar-toolbar__group ar-matrix-only" hidden>
+        <span class="ar-toolbar__label">Vertical lane</span>
+        <div class="dropdown dropdown--xs" id="ar-vlane">
+          <button class="dropdown__trigger" id="ar-vlane-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span data-dropdown-value>Fiscal period</span>
+            <span data-icon="chevron-down"></span>
+          </button>
+          <div class="dropdown__panel" id="ar-vlane-menu" role="listbox" hidden>
+            <div class="dropdown__item" role="option" data-value="capability">
+              <span class="dropdown__item__label">Business capability</span>
+            </div>
+            <div class="dropdown__item" role="option" data-value="currentDisposition">
+              <span class="dropdown__item__label">Disposition</span>
+            </div>
+            <div class="dropdown__item dropdown__item--selected" role="option" data-value="fiscalPeriod">
+              <span class="dropdown__item__label">Fiscal period</span>
+              <span data-icon="check" class="dropdown__item__check"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ar-toolbar__group ar-matrix-only" hidden>
+        <span class="ar-toolbar__label">Fiscal period</span>
+        <div class="dropdown dropdown--xs" id="ar-fiscal">
+          <button class="dropdown__trigger" id="ar-fiscal-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span data-dropdown-value>FY27</span>
+            <span data-icon="chevron-down"></span>
+          </button>
+          <div class="dropdown__panel" id="ar-fiscal-menu" role="listbox" hidden>
+            <div class="dropdown__item" role="option" data-value="FY20"><span class="dropdown__item__label">FY20</span></div>
+            <div class="dropdown__item" role="option" data-value="FY21"><span class="dropdown__item__label">FY21</span></div>
+            <div class="dropdown__item" role="option" data-value="FY22"><span class="dropdown__item__label">FY22</span></div>
+            <div class="dropdown__item" role="option" data-value="FY23"><span class="dropdown__item__label">FY23</span></div>
+            <div class="dropdown__item" role="option" data-value="FY24"><span class="dropdown__item__label">FY24</span></div>
+            <div class="dropdown__item" role="option" data-value="FY25"><span class="dropdown__item__label">FY25</span></div>
+            <div class="dropdown__item" role="option" data-value="FY26"><span class="dropdown__item__label">FY26</span></div>
+            <div class="dropdown__item dropdown__item--selected" role="option" data-value="FY27">
+              <span class="dropdown__item__label">FY27</span>
+              <span data-icon="check" class="dropdown__item__check"></span>
+            </div>
+            <div class="dropdown__item" role="option" data-value="FY28"><span class="dropdown__item__label">FY28</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ar-toolbar__spacer"></div>
+
+      <!-- Lifecycle legend (gantt view only) -->
+      <div class="ar-gantt__legend ar-gantt-only">
+        <div class="ar-gantt__legend-row"><span class="ar-gantt__legend-pip ar-gantt__legend-pip--invest"></span>Invest</div>
+        <div class="ar-gantt__legend-row"><span class="ar-gantt__legend-pip ar-gantt__legend-pip--sustain"></span>Sustain</div>
+        <div class="ar-gantt__legend-row"><span class="ar-gantt__legend-pip ar-gantt__legend-pip--migrate"></span>Migrate</div>
+        <div class="ar-gantt__legend-row"><span class="ar-gantt__legend-pip ar-gantt__legend-pip--retire"></span>Retire</div>
+      </div>
+
+      <button class="ar-toolbar__menu-btn" title="Filter">
+        <span data-icon="filter"></span>
+      </button>
+      <button class="ar-toolbar__menu-btn" id="ar-personalization-trigger" title="Settings">
+        <span data-icon="gear"></span>
+      </button>
+      <button class="ar-toolbar__menu-btn" title="More">
+        <span data-icon="more-horizontal"></span>
+      </button>
+    </div>
+
+    <!-- Body (views) -->
+    <div class="ar-body">
+
+      <!-- Gantt view -->
+      <section class="ar-view" data-view="gantt">
+        <div class="ar-gantt-page">
+
+          <!-- Rounded card container (mirrors gantt.html .gt-board) -->
+          <div class="ar-gantt-board">
+            <div class="ar-gantt" id="ar-gantt">
+              <!-- Header with month/quarter axis -->
+              <div class="ar-gantt__header">
+                <div class="ar-gantt__col ar-gantt__col--name">Name</div>
+                <div class="ar-gantt__col ar-gantt__col--disp">Current planned<br>disposition</div>
+                <div class="ar-gantt__timeline-head">
+                  <div class="ar-gantt__quarters" id="ar-quarters"></div>
+                  <div class="ar-gantt__months" id="ar-months"></div>
+                </div>
+              </div>
+              <!-- Body rows rendered by JS -->
+              <div class="ar-gantt__body" id="ar-gantt-body"></div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Matrix view -->
+      <section class="ar-view" data-view="matrix" hidden>
+        <div class="ar-matrix">
+          <div id="ar-matrix-grid"></div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Scenarios overlay — slides in from right, replaces the gantt content -->
+    <aside class="rm-scenarios-pane" id="rm-scenarios-panel" aria-label="Integration scenarios">
+    <div class="rm-scenarios-pane__header">
+      <h2 class="rm-scenarios-pane__title">Integration scenarios — Day 1</h2>
+      <div class="rm-scenarios-pane__actions">
+        <button class="rm-scenarios-pane__btn" id="rm-scenarios-close" title="Close" aria-label="Close">
+          <span data-icon="close"></span>
+        </button>
+      </div>
+    </div>
+    <div class="rm-scenarios-pane__body" id="rm-scenarios-body">
+
+      <!-- Loading state -->
+      <div class="rm-scenarios__loading" id="rm-scenarios-loading">
+        <div class="ai-loader">
+          <div class="ai-loader__ring">
+            <svg viewBox="0 0 80 80" fill="none">
+              <defs>
+                <linearGradient id="rm-rg" x1="10" y1="10" x2="70" y2="70" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#94afd0"/>
+                  <stop offset="40%" stop-color="#6366f1"/>
+                  <stop offset="100%" stop-color="#312e81"/>
+                </linearGradient>
+              </defs>
+              <circle cx="40" cy="40" r="34" stroke="url(#rm-rg)" stroke-width="8" stroke-linecap="round" stroke-dasharray="160 54" fill="none"/>
+            </svg>
+          </div>
+          <div class="ai-loader__center">
+            <div class="ai-loader__sparkles">
+              <span class="ai-loader__sparkle ai-loader__sparkle--main" data-icon="ai-sparkle"></span>
+              <span class="ai-loader__sparkle ai-loader__sparkle--tl" data-icon="ai-sparkle"></span>
+              <span class="ai-loader__sparkle ai-loader__sparkle--tr" data-icon="ai-sparkle"></span>
+            </div>
+          </div>
+        </div>
+        <span class="rm-scenarios__loading-text">Modeling integration scenarios…</span>
+      </div>
+
+      <!-- Why callout (above the cards) -->
+      <div class="rm-scenarios__why" id="rm-scenarios-why" hidden>
+        <span class="rm-scenarios__why-icon"><span data-icon="star"></span></span>
+        <div class="rm-scenarios__why-body">
+          <span class="rm-scenarios__why-title">Why Scenario A</span>
+          <p class="rm-scenarios__why-text">Lowest integration risk and most defensible to both leadership teams. Higher upfront migration cost is offset by lower attrition risk. Box compliance constraint preserved.</p>
+        </div>
+      </div>
+
+      <!-- Content state (hidden until loader finishes) -->
+      <div class="rm-scenarios" id="rm-scenarios-content" hidden>
+
+        <!-- Scenario A: Recommended -->
+        <div class="rm-scenario-card rm-scenario-card--recommended">
+          <span class="rm-scenario-card__rec"><span data-icon="star"></span> RECOMMENDED</span>
+          <span class="rm-scenario-card__label">Scenario A</span>
+          <div class="rm-scenario-card__head">
+            <h3 class="rm-scenario-card__title">Best of both</h3>
+            <span class="rm-scenario-card__pill rm-scenario-card__pill--balanced">Balanced</span>
+          </div>
+          <p class="rm-scenario-card__desc">Pick the strongest tool per capability across both portfolios.</p>
+          <div class="rm-scenario-card__metric">
+            <span class="rm-scenario-card__metric-label">Apps after Day 1</span>
+            <div class="rm-scenario-card__transition">
+              <span class="rm-scenario-card__from">16 apps</span>
+              <span class="rm-scenario-card__arrow">→</span>
+              <span class="rm-scenario-card__to rm-scenario-card__to--green">7 apps</span>
+            </div>
+          </div>
+          <div class="rm-scenario-card__divider"></div>
+          <div class="rm-scenario-card__kpis">
+            <div class="rm-scenario-card__kpi"><span class="rm-scenario-card__kpi-label">Migration cost</span><span class="rm-scenario-card__kpi-value">$3.1M</span></div>
+            <div class="rm-scenario-card__kpi"><span class="rm-scenario-card__kpi-label">3yr run savings</span><span class="rm-scenario-card__kpi-value">$3.8M</span></div>
+            <div class="rm-scenario-card__kpi"><span class="rm-scenario-card__kpi-label">Users disrupted</span><span class="rm-scenario-card__kpi-value rm-scenario-card__kpi-value--orange">~38%</span></div>
+            <div class="rm-scenario-card__kpi"><span class="rm-scenario-card__kpi-label">Risk level</span><span class="rm-scenario-card__kpi-value rm-scenario-card__kpi-value--green">Low</span></div>
+          </div>
+          <div class="rm-scenario-card__divider"></div>
+          <div class="rm-scenario-card__tradeoff">
+            <span class="rm-scenario-card__tradeoff-label">Trade-off</span>
+            <p class="rm-scenario-card__tradeoff-text">Highest migration cost, but defensible to both leadership teams. Disruption shared evenly across both companies.</p>
+          </div>
+          <button class="btn btn-sm btn-primary rm-scenario-card__view">View details</button>
+        </div>
+
+        <!-- Scenario B -->
+        <div class="rm-scenario-card">
+          <span class="rm-scenario-card__label">Scenario B</span>
+          <div class="rm-scenario-card__head">
+            <h3 class="rm-scenario-card__title">Adopt our stack</h3>
+            <span class="rm-scenario-card__pill rm-scenario-card__pill--aggressive">Aggressive</span>
+          </div>
+          <p class="rm-scenario-card__desc">Vista users migrate to our tools. Lowest cost for us, highest disruption for them.</p>
+          <div class="rm-scenario-card__metric">
+            <span class="rm-scenario-card__metric-label">Apps after Day 1</span>
+            <div class="rm-scenario-card__transition">
+              <span class="rm-scenario-card__from">16 apps</span>
+              <span class="rm-scenario-card__arrow">→</span>
+              <span class="rm-scenario-card__to rm-scenario-card__to--orange">8 apps</span>
+            </div>
+          </div>
+          <div class="rm-scenario-card__divider"></div>
+          <div class="rm-scenario-card__kpis">
+            <div class="rm-scenario-card__kpi"><span class="rm-scenario-card__kpi-label">Migration cost</span><span class="rm-scenario-card__kpi-value">$2.4M</span></div>
+            <div class="rm-scenario-card__kpi"><span class="rm-scenario-card__kpi-label">3yr run savings</span><span class="rm-scenario-card__kpi-value">$4.1M</span></div>
+            <div class="rm-scenario-card__kpi"><span class="rm-scenario-card__kpi-label">Users disrupted</span><span class="rm-scenario-card__kpi-value rm-scenario-card__kpi-value--red">~52%</span></div>
+            <div class="rm-scenario-card__kpi"><span class="rm-scenario-card__kpi-label">Risk level</span><span class="rm-scenario-card__kpi-value rm-scenario-card__kpi-value--red">High</span></div>
+          </div>
+          <div class="rm-scenario-card__divider"></div>
+          <div class="rm-scenario-card__tradeoff">
+            <span class="rm-scenario-card__tradeoff-label">Trade-off</span>
+            <p class="rm-scenario-card__tradeoff-text">Cheapest end-state, but Vista attrition risk during integration. Backlash possible from acquired employees.</p>
+          </div>
+          <button class="btn btn-sm btn-primary rm-scenario-card__view">View details</button>
+        </div>
+
+        <!-- Scenario C -->
+        <div class="rm-scenario-card">
+          <span class="rm-scenario-card__label">Scenario C</span>
+          <div class="rm-scenario-card__head">
+            <h3 class="rm-scenario-card__title">Adopt their stack</h3>
+            <span class="rm-scenario-card__pill rm-scenario-card__pill--diplomatic">Diplomatic</span>
+          </div>
+          <p class="rm-scenario-card__desc">Move us to Google Workspace for docs, keep our Teams for video.</p>
+          <div class="rm-scenario-card__metric">
+            <span class="rm-scenario-card__metric-label">Apps after Day 1</span>
+            <div class="rm-scenario-card__transition">
+              <span class="rm-scenario-card__from">16 apps</span>
+              <span class="rm-scenario-card__arrow">→</span>
+              <span class="rm-scenario-card__to rm-scenario-card__to--blue">8 apps</span>
+            </div>
+          </div>
+          <div class="rm-scenario-card__divider"></div>
+          <div class="rm-scenario-card__kpis">
+            <div class="rm-scenario-card__kpi"><span class="rm-scenario-card__kpi-label">Migration cost</span><span class="rm-scenario-card__kpi-value">$3.6M</span></div>
+            <div class="rm-scenario-card__kpi"><span class="rm-scenario-card__kpi-label">3yr run savings</span><span class="rm-scenario-card__kpi-value">$3.2M</span></div>
+            <div class="rm-scenario-card__kpi"><span class="rm-scenario-card__kpi-label">Users disrupted</span><span class="rm-scenario-card__kpi-value rm-scenario-card__kpi-value--orange">~46%</span></div>
+            <div class="rm-scenario-card__kpi"><span class="rm-scenario-card__kpi-label">Risk level</span><span class="rm-scenario-card__kpi-value rm-scenario-card__kpi-value--orange">Medium</span></div>
+          </div>
+          <div class="rm-scenario-card__divider"></div>
+          <div class="rm-scenario-card__tradeoff">
+            <span class="rm-scenario-card__tradeoff-label">Trade-off</span>
+            <p class="rm-scenario-card__tradeoff-text">Higher migration cost for our team. Faster cultural integration — signals partnership rather than acquisition.</p>
+          </div>
+          <button class="btn btn-sm btn-primary rm-scenario-card__view">View details</button>
+        </div>
+
+      </div><!-- /rm-scenarios -->
+
+      <!-- Scenario A details view (revealed by clicking "View details" on Scenario A) -->
+      <div class="rm-scenarios__details" id="rm-scenarios-details" hidden>
+        <button class="rm-scenarios__back" id="rm-scenarios-back" type="button">
+          <span data-icon="arrow-left"></span>
+          <span>Back to scenarios</span>
+        </button>
+
+        <div class="rm-scenarios__details-head">
+          <span class="rm-scenarios__details-label">Scenario A · Recommended</span>
+          <h3 class="rm-scenarios__details-title">Best of both — full plan</h3>
+          <p class="rm-scenarios__details-sub">Pick the strongest tool per capability across both portfolios. 18 months across 4 phases, 16 apps consolidating to 7.</p>
+        </div>
+
+        <!-- Full timeline -->
+        <section class="rm-detail">
+          <h4 class="rm-detail__title">Full timeline</h4>
+          <div class="rm-timeline">
+            <div class="rm-timeline__axis">
+              <span>Q3 ’26</span><span>Q4 ’26</span><span>Q1 ’27</span><span>Q2 ’27</span><span>Q3 ’27</span><span>Q4 ’27</span>
+            </div>
+            <div class="rm-timeline__track">
+              <div class="rm-timeline__phase rm-timeline__phase--invest"  style="left:0%;width:25%;">Phase 1 · Stabilize &amp; pick winners</div>
+              <div class="rm-timeline__phase rm-timeline__phase--migrate" style="left:25%;width:33%;">Phase 2 · Migrate Vista users</div>
+              <div class="rm-timeline__phase rm-timeline__phase--sustain" style="left:58%;width:25%;">Phase 3 · Consolidate</div>
+              <div class="rm-timeline__phase rm-timeline__phase--retire"  style="left:83%;width:17%;">Phase 4 · Retire</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- App-by-app sequencing -->
+        <section class="rm-detail">
+          <h4 class="rm-detail__title">App-by-app sequencing</h4>
+          <ol class="rm-seq">
+            <li class="rm-seq__item">
+              <span class="rm-seq__step">1</span>
+              <div class="rm-seq__body">
+                <div class="rm-seq__name">Microsoft Teams</div>
+                <div class="rm-seq__meta">Video conferencing · winner across both portfolios</div>
+              </div>
+              <span class="rm-disp rm-disp--invest">Invest</span>
+              <span class="rm-seq__date">Q3 ’26</span>
+            </li>
+            <li class="rm-seq__item">
+              <span class="rm-seq__step">2</span>
+              <div class="rm-seq__body">
+                <div class="rm-seq__name">Miro</div>
+                <div class="rm-seq__meta">Whiteboarding · expand seats to Vista users</div>
+              </div>
+              <span class="rm-disp rm-disp--invest">Invest</span>
+              <span class="rm-seq__date">Q3 ’26</span>
+            </li>
+            <li class="rm-seq__item">
+              <span class="rm-seq__step">3</span>
+              <div class="rm-seq__body">
+                <div class="rm-seq__name">Slack</div>
+                <div class="rm-seq__meta">Messaging · Vista keeps Google Chat in parallel through Q4</div>
+              </div>
+              <span class="rm-disp rm-disp--sustain">Sustain</span>
+              <span class="rm-seq__date">Q4 ’26</span>
+            </li>
+            <li class="rm-seq__item">
+              <span class="rm-seq__step">4</span>
+              <div class="rm-seq__body">
+                <div class="rm-seq__name">Webex</div>
+                <div class="rm-seq__meta">Vista video conferencing · users move to Teams</div>
+              </div>
+              <span class="rm-disp rm-disp--migrate">Migrate</span>
+              <span class="rm-seq__date">Q1 ’27</span>
+            </li>
+            <li class="rm-seq__item">
+              <span class="rm-seq__step">5</span>
+              <div class="rm-seq__body">
+                <div class="rm-seq__name">Mural</div>
+                <div class="rm-seq__meta">Vista whiteboarding · users move to Miro</div>
+              </div>
+              <span class="rm-disp rm-disp--migrate">Migrate</span>
+              <span class="rm-seq__date">Q1 ’27</span>
+            </li>
+            <li class="rm-seq__item">
+              <span class="rm-seq__step">6</span>
+              <div class="rm-seq__body">
+                <div class="rm-seq__name">Box</div>
+                <div class="rm-seq__meta">File storage · winner — SharePoint users migrate in</div>
+              </div>
+              <span class="rm-disp rm-disp--invest">Invest</span>
+              <span class="rm-seq__date">Q2 ’27</span>
+            </li>
+            <li class="rm-seq__item">
+              <span class="rm-seq__step">7</span>
+              <div class="rm-seq__body">
+                <div class="rm-seq__name">SharePoint</div>
+                <div class="rm-seq__meta">File storage · content migrated to Box, then sunset</div>
+              </div>
+              <span class="rm-disp rm-disp--migrate">Migrate</span>
+              <span class="rm-seq__date">Q2 ’27</span>
+            </li>
+            <li class="rm-seq__item">
+              <span class="rm-seq__step">8</span>
+              <div class="rm-seq__body">
+                <div class="rm-seq__name">Google Chat</div>
+                <div class="rm-seq__meta">Vista messaging · last users decommissioned</div>
+              </div>
+              <span class="rm-disp rm-disp--retire">Retire</span>
+              <span class="rm-seq__date">Q3 ’27</span>
+            </li>
+            <li class="rm-seq__item">
+              <span class="rm-seq__step">9</span>
+              <div class="rm-seq__body">
+                <div class="rm-seq__name">Dropbox, Lucidspark, Zoom</div>
+                <div class="rm-seq__meta">Long-tail retirement once dependent workflows are migrated</div>
+              </div>
+              <span class="rm-disp rm-disp--retire">Retire</span>
+              <span class="rm-seq__date">Q4 ’27</span>
+            </li>
+          </ol>
+        </section>
+
+        <!-- Dependencies -->
+        <section class="rm-detail">
+          <h4 class="rm-detail__title">Dependencies</h4>
+          <ul class="rm-deps">
+            <li class="rm-deps__item">
+              <span class="rm-deps__from">SSO + identity merge</span>
+              <span class="rm-deps__arrow"><span data-icon="arrow-right"></span></span>
+              <span class="rm-deps__to">Teams / Miro rollout</span>
+              <span class="rm-deps__note">Vista users need federated login before any consolidation</span>
+            </li>
+            <li class="rm-deps__item">
+              <span class="rm-deps__from">SharePoint content migration</span>
+              <span class="rm-deps__arrow"><span data-icon="arrow-right"></span></span>
+              <span class="rm-deps__to">Box exit</span>
+              <span class="rm-deps__note">Box compliance constraint requires content moved before sunset</span>
+            </li>
+            <li class="rm-deps__item">
+              <span class="rm-deps__from">Webex sunset</span>
+              <span class="rm-deps__arrow"><span data-icon="arrow-right"></span></span>
+              <span class="rm-deps__to">Vendor contract close-out</span>
+              <span class="rm-deps__note">Renewal lands Q2 ’27 — must complete migration before then</span>
+            </li>
+            <li class="rm-deps__item">
+              <span class="rm-deps__from">Google Chat retire</span>
+              <span class="rm-deps__arrow"><span data-icon="arrow-right"></span></span>
+              <span class="rm-deps__to">Slack rollout to Vista</span>
+              <span class="rm-deps__note">Parallel run for 1 quarter to absorb workflows + bots</span>
+            </li>
+          </ul>
+        </section>
+
+        <!-- Risks -->
+        <section class="rm-detail">
+          <h4 class="rm-detail__title">Risks</h4>
+          <ul class="rm-risks">
+            <li class="rm-risks__item">
+              <span class="rm-risks__sev rm-risks__sev--med">Med</span>
+              <div class="rm-risks__body">
+                <div class="rm-risks__title">Vista user attrition during Webex sunset</div>
+                <div class="rm-risks__mit">Mitigation: 8-week parallel run, champion network, exec comms cadence</div>
+              </div>
+            </li>
+            <li class="rm-risks__item">
+              <span class="rm-risks__sev rm-risks__sev--high">High</span>
+              <div class="rm-risks__body">
+                <div class="rm-risks__title">SharePoint→Box migration breaks legacy share links</div>
+                <div class="rm-risks__mit">Mitigation: redirect map in CDN, 90-day grace period, audit of top 500 docs</div>
+              </div>
+            </li>
+            <li class="rm-risks__item">
+              <span class="rm-risks__sev rm-risks__sev--med">Med</span>
+              <div class="rm-risks__body">
+                <div class="rm-risks__title">Slack/Google Chat parallel run creates message-fragmentation</div>
+                <div class="rm-risks__mit">Mitigation: bridge bot during overlap window; hard cutover communicated 30 days out</div>
+              </div>
+            </li>
+            <li class="rm-risks__item">
+              <span class="rm-risks__sev rm-risks__sev--low">Low</span>
+              <div class="rm-risks__body">
+                <div class="rm-risks__title">License double-pay during transition windows</div>
+                <div class="rm-risks__mit">Mitigation: phased seat retirement; finance reviews monthly burn against plan</div>
+              </div>
+            </li>
+            <li class="rm-risks__item">
+              <span class="rm-risks__sev rm-risks__sev--med">Med</span>
+              <div class="rm-risks__body">
+                <div class="rm-risks__title">Box compliance posture during dual-tenant phase</div>
+                <div class="rm-risks__mit">Mitigation: legal sign-off on shared retention policies before SharePoint migration starts</div>
+              </div>
+            </li>
+          </ul>
+        </section>
+      </div><!-- /rm-scenarios__details -->
+
+    </div><!-- /rm-scenarios-pane__body -->
+    </aside><!-- /rm-scenarios-pane -->
+
+  </div><!-- /app__panel -->
+
+</div><!-- /app -->
+
+<!-- Personalization right-panel (matrix view) — fixed overlay, slides in from right -->
+<aside class="right-panel right-panel--sm" id="ar-personalization-panel" aria-label="Personalization">
+  <div class="right-panel__inner">
+    <div class="right-panel__header">
+      <h2 class="right-panel__title">Personalization</h2>
+      <div class="right-panel__actions">
+        <button class="right-panel__btn" id="ar-personalization-close" title="Close" aria-label="Close">
+          <span data-icon="close"></span>
+        </button>
+      </div>
+    </div>
+    <div class="right-panel__body">
+
+      <div class="personalization__section">
+        <div class="personalization__label">Card data</div>
+        <div class="select" tabindex="0">
+          <span class="select__value select__value--selected">TCO</span>
+          <span class="select__chevron" data-icon="chevron-down"></span>
+        </div>
+        <div class="select" tabindex="0">
+          <span class="select__value select__value--selected">Score</span>
+          <span class="select__chevron" data-icon="chevron-down"></span>
+        </div>
+        <div class="select" tabindex="0">
+          <span class="select__value select__value--selected">Users</span>
+          <span class="select__chevron" data-icon="chevron-down"></span>
+        </div>
+        <div class="select" tabindex="0">
+          <span class="select__value select__value--selected">CSAT</span>
+          <span class="select__chevron" data-icon="chevron-down"></span>
+        </div>
+        <div class="select" tabindex="0">
+          <span class="select__value">-- None --</span>
+          <span class="select__chevron" data-icon="chevron-down"></span>
+        </div>
+        <div class="select" tabindex="0">
+          <span class="select__value">-- None --</span>
+          <span class="select__chevron" data-icon="chevron-down"></span>
+        </div>
+      </div>
+
+      <div class="personalization__section">
+        <div class="personalization__label">Card coloring</div>
+        <div class="select" tabindex="0">
+          <span class="select__value select__value--selected">Disposition</span>
+          <span class="select__chevron" data-icon="chevron-down"></span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</aside>
+
+<script>
+  /* ============================================================
+     Config
+  ============================================================ */
+  const WIN_MONTHS = 48;       // 4 years × 12 months
+  const WIN_YEAR = 2025;
+  const WIN_MONTH_START = 1;   // Jan 2025
+  const MON_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const QTR_OF = [0,1,1,1,2,2,2,3,3,3,4,4,4];
+
+  const TODAY = new Date('2026-04-20');
+
+  // Matrix lane state
+  let hLane = 'currentDisposition';
+  let vLane = 'fiscalPeriod';
+
+  let APPS = [];
+
+  /* ============================================================
+     Utilities — month/quarter math (ported from components/roadmap.html)
+  ============================================================ */
+  function absM(y, m) { return y * 12 + (m - 1); }
+
+  function parseYM(s) {
+    const [y, m] = s.split('-').map(Number);
+    return { y, m };
+  }
+
+  function windowMonths() {
+    const out = [];
+    for (let i = 0; i < WIN_MONTHS; i++) {
+      const a = absM(WIN_YEAR, WIN_MONTH_START) + i;
+      out.push({ y: Math.floor(a / 12), m: (a % 12) + 1 });
+    }
+    return out;
+  }
+
+  function yearGroups(months) {
+    const groups = [];
+    let cur = null;
+    months.forEach(({ y }) => {
+      if (!cur || cur.y !== y) { cur = { y, count: 1 }; groups.push(cur); }
+      else cur.count++;
+    });
+    return groups;
+  }
+
+  function quarterCells(months) {
+    const cells = [];
+    let cur = null;
+    months.forEach(({ y, m }) => {
+      const q = QTR_OF[m];
+      const key = `${y}-${q}`;
+      if (!cur || cur.key !== key) { cur = { key, y, q, count: 1 }; cells.push(cur); }
+      else cur.count++;
+    });
+    return cells;
+  }
+
+  // Bars and the today marker use the original 12-month anchor (Jan 2026).
+  // We stretch each month of source data across BAR_SCALE months of visual space so that
+  // a bar defined as 2026-01 → 2026-12 still fills 100% of the (now 48-month) timeline —
+  // preserving the pre-timeline-change bar proportions while letting the header show 4 years.
+  const BAR_DATA_YEAR  = 2026;
+  const BAR_DATA_MONTHS = 12;
+  const BAR_SCALE = WIN_MONTHS / BAR_DATA_MONTHS;
+
+  // Segment start/end → left% / width% of the timeline track
+  function segStyle(startStr, endStr) {
+    const s = parseYM(startStr);
+    const e = parseYM(endStr);
+    const base = absM(BAR_DATA_YEAR, 1);
+    const l = (absM(s.y, s.m) - base) * BAR_SCALE;
+    const r = (absM(e.y, e.m) - base + 1) * BAR_SCALE; // inclusive end month
+    if (r <= 0 || l >= WIN_MONTHS) return null;
+    const cl = Math.max(l, 0);
+    const cr = Math.min(r, WIN_MONTHS);
+    const lp = ((cl / WIN_MONTHS) * 100).toFixed(3);
+    const wp = (((cr - cl) / WIN_MONTHS) * 100).toFixed(3);
+    return `left:${lp}%; width:calc(${wp}% - 2px);`;
+  }
+
+  function todayPct() {
+    const y = TODAY.getFullYear();
+    const m = TODAY.getMonth() + 1;
+    const d = TODAY.getDate();
+    const days = new Date(y, m, 0).getDate();
+    const monthFrac = absM(y, m) - absM(BAR_DATA_YEAR, 1) + (d - 0.5) / days;
+    const frac = (monthFrac * BAR_SCALE) / WIN_MONTHS;
+    return (frac >= 0 && frac <= 1) ? frac * 100 : null;
+  }
+
+  /* ============================================================
+     Gantt render
+  ============================================================ */
+  function renderGanttAxis() {
+    const months = windowMonths();
+    const years = yearGroups(months);
+    const quarters = quarterCells(months);
+
+    document.getElementById('ar-quarters').innerHTML = years.map(y =>
+      `<div class="ar-gantt__quarter" style="flex:${y.count}">${y.y}</div>`
+    ).join('');
+
+    document.getElementById('ar-months').innerHTML = quarters.map(q =>
+      `<div class="ar-gantt__month" style="flex:${q.count}">Q${q.q}</div>`
+    ).join('');
+  }
+
+  function renderGanttBody() {
+    const months = windowMonths();
+    const quarters = quarterCells(months);
+    const gridCols = quarters.map((q, i) => {
+      const isYearStart = i > 0 && q.q === 1;
+      return `<div class="ar-gantt__gcol${isYearStart ? ' is-q-start' : ''}" style="flex:${q.count}"></div>`;
+    }).join('');
+
+    const rowsHtml = APPS.map(app => {
+      // Render each stage as an abutting segment; mark first/last for rounded caps
+      const segs = app.stages.map((st, i) => {
+        const style = segStyle(st.start, st.end);
+        if (!style) return '';
+        const cls = ['ar-gantt__seg', `ar-gantt__seg--${st.type}`];
+        if (i === 0) cls.push('is-first');
+        if (i === app.stages.length - 1) cls.push('is-last');
+
+        // Inline any markers whose month matches this segment's start
+        const markersHere = (app.markers || []).filter(mk => mk.at === st.start);
+        const iconsHtml = markersHere.map(mk => `<span data-icon="${mk.icon}"></span>`).join('');
+
+        return `<div class="${cls.join(' ')}" style="${style}" title="${app.name}: ${st.type} ${st.start} → ${st.end}">${iconsHtml}</div>`;
+      }).join('');
+
+      const displayName = app.children ? `${app.name} (${app.children})` : app.name;
+
+      return `
+        <div class="ar-gantt__row" data-app="${app.id}">
+          <div class="ar-gantt__col ar-gantt__col--name">
+            <div class="ar-gantt__name-cell">
+              <span class="ar-gantt__row-handle"><span data-icon="more-vertical"></span></span>
+              <span class="ar-gantt__chevron" ${app.children ? '' : 'aria-hidden="true"'}>${app.children ? '<span data-icon="chevron-right"></span>' : ''}</span>
+              <a class="ar-gantt__name-link" href="#" title="${displayName}">${displayName}</a>
+            </div>
+          </div>
+          <div class="ar-gantt__col ar-gantt__col--disp">
+            <span class="ar-gantt__disp">${app.currentDisposition}</span>
+          </div>
+          <div class="ar-gantt__col" style="flex:1; padding:0; border-right:none;">
+            <div class="ar-gantt__timeline">
+              <div class="ar-gantt__grid">${gridCols}</div>
+              ${segs}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    // Today marker (positioned absolutely within the body, offset by fixed leading columns)
+    const pct = todayPct();
+    const markerHtml = pct !== null
+      ? `<div class="ar-gantt__today" style="left: calc(var(--ar-name-w) + var(--ar-disp-w) + ${(pct / 100).toFixed(5)} * (100% - var(--ar-name-w) - var(--ar-disp-w)));"></div>`
+      : '';
+
+    document.getElementById('ar-gantt-body').innerHTML = rowsHtml + markerHtml;
+  }
+
+  /* ============================================================
+     Matrix render
+  ============================================================ */
+  function uniqueValues(key) {
+    const seen = new Set();
+    const out = [];
+    APPS.forEach(app => {
+      const v = app[key];
+      if (v && !seen.has(v)) { seen.add(v); out.push(v); }
+    });
+    return out;
+  }
+
+  // When lane is currentDisposition, force fixed lifecycle order
+  const LIFECYCLE_ORDER = ['Invest', 'Sustain', 'Migrate', 'Retire'];
+  const FY_ORDER = ['FY25', 'FY26', 'FY27', 'FY28'];
+  function orderedValues(key) {
+    const vals = uniqueValues(key);
+    if (key === 'currentDisposition') {
+      return LIFECYCLE_ORDER.filter(v => vals.includes(v));
+    }
+    if (key === 'fiscalPeriod') {
+      return FY_ORDER.filter(v => vals.includes(v));
+    }
+    return vals;
+  }
+
+  function dispClass(disp) {
+    return 'ar-card--' + (disp || '').toLowerCase();
+  }
+
+  // Map gantt stage type ('invest' / 'sustain' / ...) to disposition row label
+  function dispFromStageType(type) {
+    if (!type) return '';
+    return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+  }
+
+  // Convert a stage's source date range to the visual month range it occupies
+  // on the gantt timeline (which stretches each source month across BAR_SCALE
+  // visual months). Returns { startAbs, endAbs } as inclusive absolute-month ints.
+  function stageVisualRange(stage) {
+    const s = parseYM(stage.start);
+    const e = parseYM(stage.end);
+    const dataBase = absM(BAR_DATA_YEAR, 1);
+    const winBase = absM(WIN_YEAR, WIN_MONTH_START);
+    const dStart = absM(s.y, s.m) - dataBase;
+    const dEnd = absM(e.y, e.m) - dataBase;
+    return {
+      startAbs: winBase + dStart * BAR_SCALE,
+      endAbs: winBase + (dEnd + 1) * BAR_SCALE - 1
+    };
+  }
+
+  // FY25 → calendar 2025 (Jan–Dec). Inclusive month-count overlap (0 if none).
+  function stageFYOverlapMonths(stage, fyKey) {
+    const fyYear = 2000 + parseInt(fyKey.slice(2), 10);
+    const fyStartAbs = absM(fyYear, 1);
+    const fyEndAbs = absM(fyYear, 12);
+    const { startAbs, endAbs } = stageVisualRange(stage);
+    const lo = Math.max(startAbs, fyStartAbs);
+    const hi = Math.min(endAbs, fyEndAbs);
+    return Math.max(0, hi - lo + 1);
+  }
+
+  function renderMatrix() {
+    if (hLane === 'currentDisposition' && vLane === 'fiscalPeriod') {
+      renderDispositionByFiscalYear();
+      return;
+    }
+
+    const rows = orderedValues(hLane);
+    const cols = orderedValues(vLane);
+
+    const grid = document.getElementById('ar-matrix-grid');
+    grid.style.setProperty('--ar-cols', cols.length);
+
+    // Column header row (with per-column counts)
+    const colCounts = cols.map(c => APPS.filter(a => a[vLane] === c).length);
+    const colHeaderHtml = `
+      <div class="ar-matrix__colheader-row">
+        <div class="ar-matrix__corner">${labelFor(vLane)} / ${labelFor(hLane)}</div>
+        <div class="ar-matrix__colheader-labels" style="--ar-cols:${cols.length}">
+          ${cols.map((c, i) => `<div class="ar-matrix__colheader"><span>${c}</span><span class="badge badge--neutral-tertiary badge--sm">${colCounts[i]}</span></div>`).join('')}
+        </div>
+      </div>`;
+
+    // Body rows
+    const rowsHtml = rows.map(rowVal => {
+      const rowApps = APPS.filter(a => a[hLane] === rowVal);
+
+      const cellsHtml = cols.map(colVal => {
+        const inCell = rowApps.filter(a => a[vLane] === colVal);
+        if (!inCell.length) {
+          return `<div class="ar-matrix__col is-empty"><span class="ar-matrix__empty">—</span></div>`;
+        }
+        return `<div class="ar-matrix__col">${
+          inCell.map(a => `
+            <div class="ar-card ${dispClass(a.currentDisposition)}" data-app="${a.id}">
+              <div class="ar-card__name">${a.name}</div>
+              <div class="ar-card__meta">
+                <span><span class="ar-card__meta-k">TCO</span><span class="ar-card__meta-v">${a.tco}</span></span>
+                <span><span class="ar-card__meta-k">Score</span><span class="ar-card__meta-v">${a.score}</span></span>
+              </div>
+              <div class="ar-card__meta">
+                <span><span class="ar-card__meta-k">Users</span><span class="ar-card__meta-v">${a.users}</span></span>
+                <span><span class="ar-card__meta-k">CSAT</span><span class="ar-card__meta-v">${a.csat}</span></span>
+              </div>
+            </div>
+          `).join('')
+        }</div>`;
+      }).join('');
+
+      return `
+        <div class="ar-matrix__row">
+          <div class="ar-matrix__rowlabel">
+            <span class="ar-matrix__rowlabel-text">${rowVal}</span>
+            <span class="badge badge--neutral-tertiary badge--sm">${rowApps.length}</span>
+          </div>
+          <div class="ar-matrix__cells" style="--ar-cols:${cols.length}">${cellsHtml}</div>
+        </div>`;
+    }).join('');
+
+    grid.innerHTML = `
+      ${colHeaderHtml}
+      <div class="ar-matrix__grid">${rowsHtml}</div>
+    `;
+
+    Horizon.initIcons(grid);
+  }
+
+  // Stage-driven matrix: rows = lifecycle disposition, cols = fiscal year.
+  // A card is placed in (stage.type, FY) for every stage that overlaps that FY's
+  // calendar months on the visual timeline — so a card repeats across columns,
+  // and can appear in multiple rows when an app transitions disposition mid-window.
+  function renderDispositionByFiscalYear() {
+    const rows = LIFECYCLE_ORDER;
+    const cols = FY_ORDER;
+    const grid = document.getElementById('ar-matrix-grid');
+    grid.style.setProperty('--ar-cols', cols.length);
+
+    const cellApps = {};
+    rows.forEach(r => cols.forEach(c => { cellApps[r + '|' + c] = []; }));
+
+    // Per (app, FY) place the card in only one disposition row — the stage with
+    // the most months of overlap wins. Ties go to the later stage so transitions
+    // surface the newer disposition.
+    APPS.forEach(app => {
+      cols.forEach(fy => {
+        let bestRow = null;
+        let bestOverlap = 0;
+        (app.stages || []).forEach(st => {
+          const rowLabel = dispFromStageType(st.type);
+          if (!rows.includes(rowLabel)) return;
+          const overlap = stageFYOverlapMonths(st, fy);
+          if (overlap > 0 && overlap >= bestOverlap) {
+            bestOverlap = overlap;
+            bestRow = rowLabel;
+          }
+        });
+        if (bestRow) {
+          const bucket = cellApps[bestRow + '|' + fy];
+          if (!bucket.some(a => a.id === app.id)) bucket.push(app);
+        }
+      });
+    });
+
+    const colCounts = cols.map(c => {
+      const ids = new Set();
+      rows.forEach(r => cellApps[r + '|' + c].forEach(a => ids.add(a.id)));
+      return ids.size;
+    });
+
+    // Fixed slot order per row: every app that appears anywhere in this row,
+    // ordered by their position in APPS. Each FY cell renders the full slot
+    // list — present apps render normally, absent ones render as hidden
+    // placeholders so a given app stays on the same horizontal line across
+    // every column it appears in.
+    const rowSlots = {};
+    rows.forEach(r => {
+      const inRow = new Set();
+      cols.forEach(c => cellApps[r + '|' + c].forEach(a => inRow.add(a.id)));
+      rowSlots[r] = APPS.filter(a => inRow.has(a.id));
+    });
+
+    const renderCard = (a, rowVal, hidden) => `
+      <div class="ar-card ar-card--${rowVal.toLowerCase()}${hidden ? ' ar-card--placeholder' : ''}" data-app="${a.id}"${hidden ? ' aria-hidden="true"' : ''}>
+        <div class="ar-card__name">${a.name}</div>
+        <div class="ar-card__meta">
+          <span><span class="ar-card__meta-k">TCO</span><span class="ar-card__meta-v">${a.tco}</span></span>
+          <span><span class="ar-card__meta-k">Score</span><span class="ar-card__meta-v">${a.score}</span></span>
+        </div>
+        <div class="ar-card__meta">
+          <span><span class="ar-card__meta-k">Users</span><span class="ar-card__meta-v">${a.users}</span></span>
+          <span><span class="ar-card__meta-k">CSAT</span><span class="ar-card__meta-v">${a.csat}</span></span>
+        </div>
+      </div>`;
+
+    const colHeaderHtml = `
+      <div class="ar-matrix__colheader-row">
+        <div class="ar-matrix__corner">${labelFor(vLane)} / ${labelFor(hLane)}</div>
+        <div class="ar-matrix__colheader-labels" style="--ar-cols:${cols.length}">
+          ${cols.map((c, i) => `<div class="ar-matrix__colheader"><span>${c}</span><span class="badge badge--neutral-tertiary badge--sm">${colCounts[i]}</span></div>`).join('')}
+        </div>
+      </div>`;
+
+    const rowsHtml = rows.map(rowVal => {
+      const slots = rowSlots[rowVal];
+      const rowIds = new Set();
+      cols.forEach(c => cellApps[rowVal + '|' + c].forEach(a => rowIds.add(a.id)));
+
+      const cellsHtml = cols.map(colVal => {
+        if (!slots.length) {
+          return `<div class="ar-matrix__col is-empty"><span class="ar-matrix__empty">—</span></div>`;
+        }
+        const presentIds = new Set(cellApps[rowVal + '|' + colVal].map(a => a.id));
+        const slotsHtml = slots.map(app => renderCard(app, rowVal, !presentIds.has(app.id))).join('');
+        return `<div class="ar-matrix__col">${slotsHtml}</div>`;
+      }).join('');
+
+      return `
+        <div class="ar-matrix__row">
+          <div class="ar-matrix__rowlabel">
+            <span class="ar-matrix__rowlabel-text">${rowVal}</span>
+            <span class="badge badge--neutral-tertiary badge--sm">${rowIds.size}</span>
+          </div>
+          <div class="ar-matrix__cells" style="--ar-cols:${cols.length}">${cellsHtml}</div>
+        </div>`;
+    }).join('');
+
+    grid.innerHTML = `
+      ${colHeaderHtml}
+      <div class="ar-matrix__grid">${rowsHtml}</div>
+    `;
+
+    Horizon.initIcons(grid);
+  }
+
+  const LANE_LABELS = {
+    capability: 'Business capability',
+    currentDisposition: 'Disposition',
+    fiscalPeriod: 'Fiscal period'
+  };
+  function labelFor(key) {
+    return LANE_LABELS[key] || key;
+  }
+
+  function updateFiscalDropdownVisibility() {
+    const fiscalGroup = document.getElementById('ar-fiscal').closest('.ar-toolbar__group');
+    const isMatrix = !document.querySelector('.ar-view[data-view="matrix"]').hidden;
+    const laneUsesFiscal = hLane === 'fiscalPeriod' || vLane === 'fiscalPeriod';
+    fiscalGroup.hidden = !isMatrix || laneUsesFiscal;
+  }
+
+  /* ============================================================
+     View toggle + dropdowns
+  ============================================================ */
+  function setView(view) {
+    document.querySelectorAll('.ar-view').forEach(v => {
+      v.hidden = v.dataset.view !== view;
+    });
+    document.querySelectorAll('.ar-matrix-only').forEach(el => {
+      el.hidden = view !== 'matrix';
+    });
+    document.querySelectorAll('.ar-gantt-only').forEach(el => {
+      el.hidden = view !== 'gantt';
+    });
+    if (view === 'matrix') {
+      updateFiscalDropdownVisibility();
+      renderMatrix();
+    } else {
+      // Close personalization panel when leaving matrix
+      const panel = document.getElementById('ar-personalization-panel');
+      if (panel) panel.classList.remove('right-panel--open');
+    }
+  }
+
+  function initPersonalizationPanel() {
+    const trigger = document.getElementById('ar-personalization-trigger');
+    const panel   = document.getElementById('ar-personalization-panel');
+    const closeBtn = document.getElementById('ar-personalization-close');
+    if (!trigger || !panel) return;
+
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const matrixActive = !document.querySelector('.ar-view[data-view="matrix"]').hidden;
+      if (!matrixActive) return;
+      panel.classList.toggle('right-panel--open');
+    });
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        panel.classList.remove('right-panel--open');
+      });
+    }
+  }
+
+  function setDropdownValue(btnId, menuId, value, labelMap) {
+    const btn = document.getElementById(btnId);
+    btn.querySelector('[data-dropdown-value]').textContent = labelMap ? labelMap[value] : value;
+    document.querySelectorAll(`#${menuId} .dropdown__item`).forEach(it => {
+      const isSelected = it.dataset.value === value;
+      it.classList.toggle('dropdown__item--selected', isSelected);
+      let check = it.querySelector('.dropdown__item__check');
+      if (isSelected && !check) {
+        check = document.createElement('span');
+        check.className = 'dropdown__item__check';
+        check.setAttribute('data-icon', 'check');
+        it.appendChild(check);
+        Horizon.initIcons(it);
+      } else if (!isSelected && check) {
+        check.remove();
+      }
+    });
+  }
+
+  function closeAllMenus() {
+    document.querySelectorAll('.dropdown__panel:not([hidden])').forEach(panel => {
+      panel.hidden = true;
+      const trigger = panel.parentElement.querySelector('.dropdown__trigger');
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function initDropdowns() {
+    // Generic: toggle panel on trigger click, close on outside click
+    document.addEventListener('click', (e) => {
+      const trigger = e.target.closest('.dropdown__trigger');
+      if (!trigger) {
+        if (!e.target.closest('.dropdown__panel')) closeAllMenus();
+        return;
+      }
+      const dropdown = trigger.closest('.dropdown');
+      const panel = dropdown.querySelector('.dropdown__panel');
+      if (!panel) return;
+      const wasOpen = !panel.hidden;
+      closeAllMenus();
+      if (!wasOpen) {
+        panel.hidden = false;
+        trigger.setAttribute('aria-expanded', 'true');
+      }
+    });
+
+    // Chart type (pill segmented control)
+    document.querySelectorAll('#ar-chart-type-toggle .pill').forEach(pill => {
+      pill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const val = pill.dataset.value;
+        document.querySelectorAll('#ar-chart-type-toggle .pill').forEach(p => {
+          p.classList.remove('pill--selected');
+          p.setAttribute('aria-selected', 'false');
+        });
+        pill.classList.add('pill--selected');
+        pill.setAttribute('aria-selected', 'true');
+        closeAllMenus();
+        setView(val);
+      });
+    });
+
+    // Horizontal lane
+    document.querySelectorAll('#ar-hlane-menu .dropdown__item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        hLane = item.dataset.value;
+        setDropdownValue('ar-hlane-btn', 'ar-hlane-menu', hLane, LANE_LABELS);
+        closeAllMenus();
+        updateFiscalDropdownVisibility();
+        renderMatrix();
+      });
+    });
+
+    // Vertical lane
+    document.querySelectorAll('#ar-vlane-menu .dropdown__item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        vLane = item.dataset.value;
+        setDropdownValue('ar-vlane-btn', 'ar-vlane-menu', vLane, LANE_LABELS);
+        closeAllMenus();
+        updateFiscalDropdownVisibility();
+        renderMatrix();
+      });
+    });
+
+    // Fiscal period
+    document.querySelectorAll('#ar-fiscal-menu .dropdown__item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setDropdownValue('ar-fiscal-btn', 'ar-fiscal-menu', item.dataset.value);
+        closeAllMenus();
+      });
+    });
+  }
+
+  /* ============================================================
+     Init
+  ============================================================ */
+  document.addEventListener('DOMContentLoaded', () => {
+    // Mount sidenav component first (Horizon.mountComponents also runs later via interactions.js,
+    // but we need the sidenav DOM in place before we wire click handlers below).
+    Horizon.mountComponents();
+    Horizon.initIcons();
+
+    // Sidenav
+    const sidenav = document.getElementById('sidenav-main');
+    if (sidenav) {
+      sidenav.querySelector('.sidenav__menu-btn').addEventListener('click', () => {
+        sidenav.classList.toggle('sidenav--collapsed');
+      });
+      // Clear default "Home" active; mark Roadmap active
+      sidenav.querySelectorAll('.sidenav__item').forEach(i => i.classList.remove('sidenav__item--active'));
+      const roadmapLink = sidenav.querySelector('a[href$="AppOwner_roadmap.html"]');
+      if (roadmapLink) roadmapLink.classList.add('sidenav__item--active');
+    }
+
+    // Load data — file:// can't fetch, so data is bundled via data/applications.js
+    APPS = window.APPLICATIONS || [];
+    // Stub fiscalPeriod per app for matrix rendering when "Fiscal period" lane is picked
+    APPS.forEach((a, i) => { a.fiscalPeriod = FY_ORDER[i % FY_ORDER.length]; });
+    document.getElementById('app-count').textContent = APPS.length;
+    renderGanttAxis();
+    renderGanttBody();
+    Horizon.initIcons(document.getElementById('ar-gantt'));
+
+    initDropdowns();
+    initMatrixCohortHover();
+    initPersonalizationPanel();
+  });
+
+  // Hovering any card highlights every other card for the same app id.
+  function initMatrixCohortHover() {
+    const grid = document.getElementById('ar-matrix-grid');
+    if (!grid) return;
+    let activeId = null;
+    const clear = () => {
+      if (!activeId) return;
+      grid.querySelectorAll('.ar-card.is-cohort-hover').forEach(el => el.classList.remove('is-cohort-hover'));
+      activeId = null;
+    };
+    grid.addEventListener('mouseover', (e) => {
+      const card = e.target.closest('.ar-card[data-app]');
+      if (!card || card.classList.contains('ar-card--placeholder')) { clear(); return; }
+      const id = card.dataset.app;
+      if (id === activeId) return;
+      clear();
+      activeId = id;
+      grid.querySelectorAll(`.ar-card[data-app="${id}"]:not(.ar-card--placeholder)`).forEach(el => {
+        el.classList.add('is-cohort-hover');
+      });
+    });
+    grid.addEventListener('mouseleave', clear);
+  }
+
+  // ── Conversation pane (Plan roadmap with AI) ─────────────
+  (function () {
+    const trigger   = document.getElementById('plan-roadmap-ai');
+    const convPane  = document.getElementById('convo-pane');
+    const convBody  = convPane?.querySelector('.convo-pane__body');
+    const closeBtn  = document.getElementById('convo-close');
+    const expandBtn = document.getElementById('convo-expand');
+    const inputCard = document.getElementById('convo-input-card');
+    const input     = document.getElementById('convo-input');
+    const sendBtn   = inputCard?.querySelector('.convo-input-card__send');
+    const messages  = document.getElementById('convo-messages');
+    if (!trigger || !convPane) return;
+
+    const PREFILL_TURN1 = "We're integrating with Vista after the merger. I need a plan for my collaboration apps — figure out what to keep, what to retire, what to migrate users to. Day 1 is in 12 months.";
+    const AI_REPLY_TURN1 = `Got it. Pulling Vista's collaboration portfolio from the integration data room — they run on <strong>Google Workspace</strong> primarily, with <strong>Slack</strong> and <strong>Zoom</strong>. Combined, both companies use 16 apps across the same 4 capabilities.<br><br>Before I model integration scenarios, two things aren't clear:<br>· Is <strong>Box</strong>'s <strong>SharePoint</strong> migration still blocked by Legal?<br>· Any contract dates I should plan around?`;
+
+    const PREFILL_TURN2 = "Box is still blocked — revisit FY29. And Zoom is locked through Q2 FY28, $380K early termination penalty.";
+    const AI_REPLY_TURN2_A = `Logged. Box stays for now. Zoom planned around contract end. Generating integration scenarios now.`;
+    const AI_REPLY_TURN2_B = `Here are three integration scenarios for Day 1. Compare them side by side:`;
+
+    let turn = 0;
+
+    function openConvo()  { convPane.classList.add('convo-pane--open'); }
+    function closeConvo() { convPane.classList.remove('convo-pane--open'); }
+
+    function autoGrow() {
+      if (!input) return;
+      input.style.height = 'auto';
+      input.style.height = input.scrollHeight + 'px';
+      inputCard.classList.toggle('convo-input-card--expanded', input.scrollHeight > 28);
+    }
+
+    function prefillForCurrentTurn() {
+      if (!input || input.value.trim() !== '') return;
+      if (turn === 0)      input.value = PREFILL_TURN1;
+      else if (turn === 1) input.value = PREFILL_TURN2;
+      else return;
+      autoGrow();
+      input.focus();
+    }
+
+    function scrollConvoToBottom() {
+      if (convBody) convBody.scrollTop = convBody.scrollHeight;
+    }
+
+    function appendUserBubble({ text, withPdf = false }) {
+      const wrap = document.createElement('div');
+      wrap.className = 'bubble-wrap';
+      const pdfHtml = withPdf ? `
+        <div class="bubble__attachment">
+          <span class="bubble__attachment-icon"><span data-icon="file-pdf"></span></span>
+          <div class="bubble__attachment-meta">
+            <span class="bubble__attachment-name">Zoom-Enterprise-Agreement.pdf</span>
+            <span class="bubble__attachment-type">PDF · 2.4 MB</span>
+          </div>
+        </div>` : '';
+      wrap.innerHTML = `<div class="bubble"><p class="bubble__text">${text.replace(/\n/g,'<br>')}</p>${pdfHtml}</div>`;
+      messages.appendChild(wrap);
+      Horizon.initIcons?.(wrap);
+      scrollConvoToBottom();
+    }
+
+    function appendTypingBubble() {
+      const wrap = document.createElement('div');
+      wrap.className = 'bubble-wrap bubble-wrap--ai';
+      wrap.innerHTML = `<div class="bubble bubble--ai"><div class="rm-typing"><span class="rm-typing__dot"></span><span class="rm-typing__dot"></span><span class="rm-typing__dot"></span></div></div>`;
+      messages.appendChild(wrap);
+      scrollConvoToBottom();
+      return wrap;
+    }
+
+    function replaceTypingWithAi(typingWrap, html) {
+      typingWrap.innerHTML = `<div class="bubble bubble--ai"><p class="bubble__text">${html}</p></div>`;
+      scrollConvoToBottom();
+    }
+
+    function resetInput() {
+      if (!input) return;
+      input.value = '';
+      input.style.height = 'auto';
+      inputCard.classList.remove('convo-input-card--expanded');
+    }
+
+    function sendMessage() {
+      const text = (input?.value || '').trim();
+      if (!text) return;
+
+      if (turn === 0) {
+        appendUserBubble({ text });
+        const typing = appendTypingBubble();
+        setTimeout(() => replaceTypingWithAi(typing, AI_REPLY_TURN1), 1400);
+        turn = 1;
+      } else if (turn === 1) {
+        appendUserBubble({ text, withPdf: true });
+        const typing = appendTypingBubble();
+        setTimeout(() => {
+          replaceTypingWithAi(typing, AI_REPLY_TURN2_A);
+          // Second AI bubble appears shortly after, then scenarios slide in
+          const typing2 = appendTypingBubble();
+          setTimeout(() => {
+            replaceTypingWithAi(typing2, AI_REPLY_TURN2_B);
+            showScenariosPanel();
+          }, 900);
+        }, 1400);
+        turn = 2;
+      } else {
+        appendUserBubble({ text });
+      }
+      resetInput();
+    }
+
+    // ── Scenarios panel: open with loader, then reveal cards ──
+    const scenariosPanel   = document.getElementById('rm-scenarios-panel');
+    const scenariosLoading = document.getElementById('rm-scenarios-loading');
+    const scenariosContent = document.getElementById('rm-scenarios-content');
+    const scenariosWhy     = document.getElementById('rm-scenarios-why');
+    const scenariosClose   = document.getElementById('rm-scenarios-close');
+
+    const scenariosHeader = scenariosPanel?.querySelector('.rm-scenarios-pane__header');
+
+    function showScenariosPanel() {
+      if (!scenariosPanel) return;
+      if (scenariosLoading) scenariosLoading.style.display = 'flex';
+      if (scenariosContent) scenariosContent.hidden = true;
+      if (scenariosWhy)     scenariosWhy.hidden = true;
+      if (scenariosHeader)  scenariosHeader.style.display = 'none';
+      scenariosPanel.classList.add('rm-scenarios-pane--open');
+      Horizon.initIcons?.(scenariosPanel);
+      setTimeout(() => {
+        if (scenariosLoading) scenariosLoading.style.display = 'none';
+        if (scenariosContent) scenariosContent.hidden = false;
+        if (scenariosWhy)     scenariosWhy.hidden = false;
+        if (scenariosHeader)  scenariosHeader.style.display = '';
+        Horizon.initIcons?.(scenariosPanel);
+      }, 1000);
+    }
+
+    scenariosClose?.addEventListener('click', () => {
+      scenariosPanel?.classList.remove('rm-scenarios-pane--open');
+    });
+
+    // ── Scenario A "View details" → swap cards for full plan, then back ──
+    const scenariosDetails = document.getElementById('rm-scenarios-details');
+    const scenariosBack    = document.getElementById('rm-scenarios-back');
+    const scenarioAView    = scenariosContent?.querySelector('.rm-scenario-card--recommended .rm-scenario-card__view');
+
+    function showScenarioDetails() {
+      if (!scenariosDetails) return;
+      if (scenariosWhy)     scenariosWhy.hidden = true;
+      if (scenariosContent) scenariosContent.hidden = true;
+      scenariosDetails.hidden = false;
+      Horizon.initIcons?.(scenariosDetails);
+      const body = document.getElementById('rm-scenarios-body');
+      if (body) body.scrollTop = 0;
+    }
+    function hideScenarioDetails() {
+      if (!scenariosDetails) return;
+      scenariosDetails.hidden = true;
+      if (scenariosWhy)     scenariosWhy.hidden = false;
+      if (scenariosContent) scenariosContent.hidden = false;
+    }
+
+    scenarioAView?.addEventListener('click', showScenarioDetails);
+    scenariosBack?.addEventListener('click', hideScenarioDetails);
+
+    trigger.addEventListener('click', (e) => { e.stopPropagation(); openConvo(); });
+    closeBtn?.addEventListener('click', (e) => { e.stopPropagation(); closeConvo(); });
+    expandBtn?.addEventListener('click', (e) => { e.stopPropagation(); /* full-page placeholder */ });
+
+    inputCard?.addEventListener('click', prefillForCurrentTurn);
+    input?.addEventListener('input', autoGrow);
+    sendBtn?.addEventListener('click', (e) => { e.stopPropagation(); sendMessage(); });
+
+    // ── Auto-populate end state (this file is the post-conversation snapshot) ──
+    function appendAiBubble(html) {
+      const wrap = document.createElement('div');
+      wrap.className = 'bubble-wrap bubble-wrap--ai';
+      wrap.innerHTML = `<div class="bubble bubble--ai"><p class="bubble__text">${html}</p></div>`;
+      messages.appendChild(wrap);
+    }
+
+    function autoPopulateEndState() {
+      openConvo();
+      appendUserBubble({ text: PREFILL_TURN1 });
+      appendAiBubble(AI_REPLY_TURN1);
+      appendUserBubble({ text: PREFILL_TURN2, withPdf: true });
+      appendAiBubble(AI_REPLY_TURN2_A);
+      appendAiBubble(AI_REPLY_TURN2_B);
+      turn = 2;
+
+      // Open scenarios pane with content (skip loader)
+      if (scenariosPanel) {
+        if (scenariosLoading) scenariosLoading.style.display = 'none';
+        if (scenariosContent) scenariosContent.hidden = false;
+        if (scenariosWhy)     scenariosWhy.hidden = false;
+        if (scenariosHeader)  scenariosHeader.style.display = '';
+        scenariosPanel.classList.add('rm-scenarios-pane--open');
+        scenariosPanel.style.transition = 'none';
+        requestAnimationFrame(() => { scenariosPanel.style.transition = ''; });
+      }
+
+      window.Horizon?.initIcons?.();
+      requestAnimationFrame(() => { if (convBody) convBody.scrollTop = convBody.scrollHeight; });
+    }
+
+    // Wait for deferred scripts (interactions.js → window.Horizon) before populating
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', autoPopulateEndState);
+    } else {
+      autoPopulateEndState();
+    }
+  })();
+</script>
+
+</body>
+</html>

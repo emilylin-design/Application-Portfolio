@@ -1,0 +1,401 @@
+/* ============================================================
+   Conversation Pane
+   A side pane for AI-assisted chat, designed to sit on
+   a coloured canvas as a flex sibling of a sidebar and a
+   floating-panel.
+
+   Key behaviour:
+     - Titlebar and footer are pinned (flex-shrink: 0).
+     - Body scrolls independently (flex: 1, overflow-y: auto).
+     - Footer input is ALWAYS sticky to the bottom.
+     - min-height: 0 on the body prevents flex overflow.
+
+   Structure:
+     .convo-pane                        — outer wrapper (width transition)
+       .convo-pane__inner               — fixed-width inner column
+         .convo-pane__titlebar          — "Now Assist" + action buttons
+         .convo-pane__body              — scrollable message area
+         .convo-pane__footer            — sticky bottom input
+
+   Modifiers:
+     .convo-pane--open                  — expands to --convo-pane-width
+
+   Depends on:
+     tokens.css  — --convo-pane-width, spacing, typography, colours
+============================================================ */
+
+/* ---- Outer wrapper (animates width) ---- */
+.convo-pane {
+  flex-shrink: 0;
+  width: 0;
+  overflow: hidden;
+  transition: width 320ms cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 12px 0;
+  position: sticky;
+  top: 12px;
+  height: calc(100vh - 24px);
+  align-self: flex-start;
+}
+
+.convo-pane--open {
+  width: var(--convo-pane-width);
+}
+
+/* ---- Inner wrapper (fixed width so content doesn't squish) ---- */
+.convo-pane__inner {
+  width: var(--convo-pane-width);
+  min-width: var(--convo-pane-width);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  overflow: hidden;
+}
+
+/* ---- Title bar ---- */
+.convo-pane__titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  flex-shrink: 0;
+}
+
+.convo-pane__titlebar-label {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.convo-pane__titlebar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.convo-pane__titlebar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-lg);
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+.convo-pane__titlebar-btn:hover { background-color: rgba(0,0,0,0.06); color: var(--text-primary); }
+.convo-pane__titlebar-btn [data-icon] { width: 16px; height: 16px; }
+
+/* ---- Chat scroll area ----
+   flex: 1 fills available space; min-height: 0 prevents
+   the flex item from overflowing its container; overflow-y
+   scrolls content while titlebar and footer stay pinned. */
+.convo-pane__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-8) var(--space-6) var(--space-4);
+  margin-right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.10) transparent;
+}
+.convo-pane__body::-webkit-scrollbar { width: 2px; }
+.convo-pane__body::-webkit-scrollbar-track { background: transparent; }
+.convo-pane__body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.10); border-radius: 9999px; }
+
+/* ---- Footer input (sticky bottom) ---- */
+.convo-pane__footer {
+  padding: var(--space-4) var(--space-6);
+  flex-shrink: 0;
+  background: transparent;
+}
+
+.convo-input-card {
+  background: white;
+  border-radius: 9999px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.convo-input-card__add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color var(--transition-fast);
+}
+.convo-input-card__add:hover { background-color: var(--bg-secondary); }
+.convo-input-card__add [data-icon] { width: 16px; height: 16px; }
+
+.convo-input-card__placeholder {
+  flex: 1;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+  min-width: 0;
+}
+.convo-input-card__placeholder::placeholder { color: var(--text-tertiary); }
+
+.convo-input-card__send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  border: none;
+  background: var(--color-primary);
+  color: white;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color var(--transition-fast);
+}
+.convo-input-card__send:hover { background-color: var(--color-primary-hover); }
+.convo-input-card__send [data-icon] { width: 14px; height: 14px; }
+
+/* ---- Standalone sparkle icon ---- */
+.convo-sparkle {
+  width: 28px;
+  height: 28px;
+  color: var(--color-accent);
+  margin-bottom: var(--space-1);
+}
+.convo-sparkle [data-icon] { width: 28px; height: 28px; }
+
+/* ---- Greeting ---- */
+.convo-msg__greeting {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+/* ---- Body text ---- */
+.convo-msg__text {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: var(--line-height-relaxed);
+  margin: 0;
+}
+.convo-msg__text strong { color: var(--text-primary); font-weight: var(--font-weight-semibold); }
+
+/* ---- Inline context card ---- */
+.convo-card {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.convo-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.convo-card__title {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.convo-card__goal {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+}
+
+.convo-card__goal-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.convo-card__goal-icon [data-icon] { width: 18px; height: 18px; }
+
+.convo-card__goal-text {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  line-height: var(--line-height-relaxed);
+}
+.convo-card__goal-text strong { color: var(--text-primary); font-weight: var(--font-weight-semibold); }
+
+.convo-card__activity-label {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.convo-card__activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.convo-card__activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  line-height: var(--line-height-relaxed);
+}
+
+.convo-card__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.convo-card__footer {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.convo-card__action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+.convo-card__action-btn:hover { background-color: rgba(14,78,105,0.06); }
+.convo-card__action-btn [data-icon] { width: 13px; height: 13px; }
+
+/* ---- Speech bubbles ---- */
+.bubble-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.bubble-wrap--ai {
+  align-items: flex-start;
+}
+
+.bubble {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: 456px;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+  border-radius: var(--radius-2xl) var(--radius-md) var(--radius-2xl) var(--radius-2xl);
+}
+
+.bubble--ai {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md) var(--radius-2xl) var(--radius-2xl) var(--radius-2xl);
+}
+
+@keyframes bubble-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+.bubble--loading {
+  animation: bubble-pulse 1.4s ease-in-out infinite;
+}
+
+.bubble-pills {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.bubble__text {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  margin: 0;
+  color: inherit;
+}
+
+.bubble__helper {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  opacity: 0.65;
+  text-align: right;
+  margin: 0;
+}
+
+.bubble-wrap--ai .bubble__helper {
+  text-align: left;
+}
+
+/* ---- Feedback action row ---- */
+.convo-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.convo-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-lg);
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+.convo-action-btn:hover { background-color: rgba(0,0,0,0.06); color: var(--text-primary); }
+.convo-action-btn [data-icon] { width: 14px; height: 14px; }
